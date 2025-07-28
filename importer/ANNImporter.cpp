@@ -116,16 +116,28 @@ std::string ANNImporter::getImporterName() const {
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
-    skipWhitespaceAndComments(file);
+    std::string line;
     
-    // Read network name (optional)
-    std::string token = readToken(file);
-    if (token == "NETWORK") {
-        std::string networkName = readToken(file);
-        network.setName(networkName);
-    } else {
-        // Put token back by seeking back
-        file.seekg(static_cast<std::streamoff>(-static_cast<std::streamoff>(token.length())), std::ios::cur);
+    // Read lines until we find the network name or end of file
+    while (std::getline(file, line)) {
+        // Skip empty lines and comments
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        
+        // Check for network name starting with 'G'
+        if (line[0] == 'G') {
+            std::istringstream iss(line);
+            std::string prefix, networkName;
+            if (iss >> prefix >> networkName) {
+                network.setName(networkName);
+            }
+            return true;
+        }
+        
+        // If we encounter other data, seek back and return
+        file.seekg(static_cast<std::streamoff>(-static_cast<std::streamoff>(line.length() + 1)), std::ios::cur);
+        return true;
     }
     
     return true;
@@ -140,46 +152,67 @@ bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNImporter::parseLayerInformation(std::ifstream& file, Network& network) {
-    skipWhitespaceAndComments(file);
+    std::string line;
+    std::vector<std::pair<double, int>> neurons; // bias, activation function type
+    std::vector<std::pair<int, int>> layers; // start neuron, end neuron
     
-    std::string token = readToken(file);
-    if (token != "LAYERS") {
-        return false;
-    }
+    // Reset file position to beginning
+    file.clear();
+    file.seekg(0, std::ios::beg);
     
-    int layerCount;
-    file >> layerCount;
-    if (file.fail() || layerCount <= 0) {
-        return false;
-    }
-    
-    // Parse each layer
-    for (int i = 0; i < layerCount; ++i) {
-        skipWhitespaceAndComments(file);
-        
-        token = readToken(file);
-        if (token != "LAYER") {
-            return false;
+    // First pass: collect neuron and layer information
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '#') {
+            continue;
         }
         
-        int neuronCount;
-        file >> neuronCount;
-        if (file.fail() || neuronCount <= 0) {
-            return false;
+        std::istringstream iss(line);
+        char prefix;
+        iss >> prefix;
+        
+        if (prefix == 'N') {
+            // Neuron definition: N bias activation_type
+            double bias;
+            int activationType;
+            if (iss >> bias >> activationType) {
+                neurons.push_back({bias, activationType});
+            }
         }
+        else if (prefix == 'L') {
+            // Layer definition: L start_neuron end_neuron
+            int startNeuron, endNeuron;
+            if (iss >> startNeuron >> endNeuron) {
+                layers.push_back({startNeuron, endNeuron});
+            }
+        }
+    }
+    
+    // Create layers and neurons
+    for (const auto& layerInfo : layers) {
+        auto layer = std::make_unique<Layer>();
         
-        // Create layer
-        auto layer = std::unique_ptr<Layer>(new Layer());
-        
-        // Parse neurons for this layer
-        if (!parseNeuronInformation(file, *layer, neuronCount)) {
-            return false;
+        for (int i = layerInfo.first; i <= layerInfo.second; ++i) {
+            if (i >= 0 && i < static_cast<int>(neurons.size())) {
+                auto neuron = std::make_unique<Neuron>();
+                neuron->setBias(neurons[i].first);
+                
+                // Set activation function based on type
+                if (neurons[i].second == 0) {
+                    // Type 0 = Linear (no activation)
+                    neuron->setActivationFunction(createActivationFunction("Linear"));
+                } else {
+                    // Default to linear for unknown types
+                    neuron->setActivationFunction(createActivationFunction("Linear"));
+                }
+                
+                layer->addNeuron(std::move(neuron));
+            }
         }
         
         network.addLayer(std::move(layer));
     }
     
-    return true;
+    return !layers.empty();
 }
 
 //-------------------------------------------------------------
@@ -234,53 +267,55 @@ bool ANNImporter::parseNeuronInformation(std::ifstream& file, Layer& layer, int 
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNImporter::parseConnections(std::ifstream& file, Network& network) {
-    skipWhitespaceAndComments(file);
+    std::string line;
     
-    std::string token = readToken(file);
-    if (token != "CONNECTIONS") {
-        return true; // Connections section is optional
-    }
+    // Reset file position to beginning  
+    file.clear();
+    file.seekg(0, std::ios::beg);
     
-    int connectionCount;
-    file >> connectionCount;
-    if (file.fail() || connectionCount < 0) {
-        return false;
-    }
-    
-    // Parse each connection
-    for (int i = 0; i < connectionCount; ++i) {
-        skipWhitespaceAndComments(file);
-        
-        token = readToken(file);
-        if (token != "CONNECTION") {
-            return false;
+    // Parse synapse connections with format: S from_neuron to_neuron weight
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '#') {
+            continue;
         }
         
-        int fromLayer, fromNeuron, toLayer, toNeuron;
-        double weight;
+        std::istringstream iss(line);
+        char prefix;
+        iss >> prefix;
         
-        file >> fromLayer >> fromNeuron >> toLayer >> toNeuron >> weight;
-        if (file.fail()) {
-            return false;
-        }
-        
-        // Create connection
-        Layer* sourceLayer = network.getLayer(fromLayer);
-        Layer* targetLayer = network.getLayer(toLayer);
-        
-        if (!sourceLayer || !targetLayer) {
-            return false;
-        }
-        
-        Neuron* sourceNeuron = sourceLayer->getNeuron(fromNeuron);
-        Neuron* targetNeuron = targetLayer->getNeuron(toNeuron);
-        
-        if (!sourceNeuron || !targetNeuron) {
-            return false;
-        }
-        
-        if (!sourceNeuron->connectTo(*targetNeuron, weight)) {
-            return false;
+        if (prefix == 'S') {
+            int fromNeuron, toNeuron;
+            double weight;
+            
+            if (iss >> fromNeuron >> toNeuron >> weight) {
+                // Handle external input connections (from -1)
+                if (fromNeuron == -1 && toNeuron >= 0) {
+                    // Create input synapse for the target neuron
+                    Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
+                    if (targetNeuron) {
+                        auto synapse = std::make_unique<Synapse>(weight, nullptr, targetNeuron, false);
+                        targetNeuron->addInputSynapse(std::move(synapse));
+                    }
+                    continue;
+                }
+                
+                // Handle external output connections (to -1)
+                if (toNeuron == -1 && fromNeuron >= 0) {
+                    // These represent outputs - we can ignore them for now
+                    // as they don't affect the network structure
+                    continue;
+                }
+                
+                // Handle inter-neuron connections
+                if (fromNeuron >= 0 && toNeuron >= 0) {
+                    Neuron* sourceNeuron = findNeuronByGlobalIndex(network, fromNeuron);
+                    Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
+                    
+                    if (sourceNeuron && targetNeuron) {
+                        sourceNeuron->connectTo(*targetNeuron, weight);
+                    }
+                }
+            }
         }
     }
     
@@ -348,4 +383,30 @@ std::string ANNImporter::readToken(std::ifstream& file) {
 //-------------------------------------------------------------
 std::unique_ptr<ActivationFunction> ANNImporter::parseActivationFunction(const std::string& functionName) {
     return createActivationFunction(functionName);
+}
+
+//-------------------------------------------------------------
+//【函数名称】findNeuronByGlobalIndex
+//【函数功能】根据全局索引查找神经元
+//【参数】network：网络引用，globalIndex：全局索引
+//【返回值】Neuron*，找到的神经元指针，未找到返回nullptr
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+Neuron* ANNImporter::findNeuronByGlobalIndex(Network& network, int globalIndex) {
+    int currentIndex = 0;
+    
+    for (int layerIdx = 0; layerIdx < network.getLayerCount(); ++layerIdx) {
+        Layer* layer = network.getLayer(layerIdx);
+        if (!layer) continue;
+        
+        for (int neuronIdx = 0; neuronIdx < layer->getNeuronCount(); ++neuronIdx) {
+            if (currentIndex == globalIndex) {
+                return layer->getNeuron(neuronIdx);
+            }
+            currentIndex++;
+        }
+    }
+    
+    return nullptr;
 }

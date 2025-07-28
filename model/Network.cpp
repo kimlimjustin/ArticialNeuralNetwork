@@ -281,22 +281,37 @@ std::vector<double> Network::predict(const std::vector<double>& inputs) {
     std::vector<double> currentOutputs = inputs;
     
     for (size_t layerIndex = 0; layerIndex < m_layers.size(); ++layerIndex) {
-        // For the first layer, we need to handle external inputs differently
+        Layer* layer = m_layers[layerIndex].get();
+        
         if (layerIndex == 0) {
-            // For first layer, each neuron gets a single input value
+            // For first layer, each neuron gets one input value
+            // Check if neurons have input synapses
             std::vector<std::vector<double>> layerInputs;
-            for (size_t i = 0; i < currentOutputs.size(); ++i) {
-                layerInputs.push_back({currentOutputs[i]});
+            for (int i = 0; i < layer->getNeuronCount(); ++i) {
+                const Neuron* neuron = layer->getNeuron(i);
+                if (neuron && neuron->getInputSynapseCount() > 0) {
+                    // Neuron expects inputs through synapses
+                    layerInputs.push_back({currentOutputs[i]});
+                } else {
+                    // Neuron can accept direct input
+                    layerInputs.push_back({currentOutputs[i]});
+                }
             }
-            currentOutputs = m_layers[layerIndex]->forwardPropagate(layerInputs);
+            currentOutputs = layer->forwardPropagate(layerInputs);
         } else {
             // For subsequent layers, neurons get outputs from previous layer
             std::vector<std::vector<double>> layerInputs;
-            for (int neuronIndex = 0; neuronIndex < m_layers[layerIndex]->getNeuronCount(); ++neuronIndex) {
-                // Each neuron in current layer receives all outputs from previous layer
-                layerInputs.push_back(currentOutputs);
+            for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
+                const Neuron* neuron = layer->getNeuron(neuronIndex);
+                if (neuron && neuron->getInputSynapseCount() > 0) {
+                    // Neuron has input synapses, provide all previous outputs
+                    layerInputs.push_back(currentOutputs);
+                } else {
+                    // Neuron without synapses, provide all previous outputs anyway
+                    layerInputs.push_back(currentOutputs);
+                }
             }
-            currentOutputs = m_layers[layerIndex]->forwardPropagate(layerInputs);
+            currentOutputs = layer->forwardPropagate(layerInputs);
         }
     }
     

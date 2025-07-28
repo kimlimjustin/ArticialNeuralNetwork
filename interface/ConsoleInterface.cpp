@@ -278,6 +278,26 @@ void ConsoleInterface::handleInference() {
         return;
     }
     
+    // Display information about the expected input format
+    displayInfo("Network expects " + std::to_string(inputSize) + " input values.");
+    
+    // Generate and display an example of input values
+    std::cout << "\nExample input values: ";
+    for (int i = 0; i < inputSize; ++i) {
+        if (i == 0) {
+            std::cout << "1.0";
+        } else if (i == 1) {
+            std::cout << " 0.5";
+        } else if (i == 2) {
+            std::cout << " -0.3";
+        } else {
+            std::cout << " " << (i % 2 == 0 ? "0.0" : "1.0");
+        }
+    }
+    std::cout << std::endl;
+    std::cout << "Note: Values should be separated by spaces." << std::endl;
+    std::cout << std::endl;
+    
     std::vector<double> inputs = getDoubleVector("Enter input values", inputSize);
     
     try {

@@ -65,6 +65,14 @@ private:
      * @return Function name string
      */
     std::string getActivationFunctionName(const ActivationFunction* activationFunction);
+    
+    /**
+     * @brief Find the global index of a neuron in the network
+     * @param network Network to search in
+     * @param targetNeuron Neuron to find
+     * @return Global index of the neuron, -1 if not found
+     */
+    int findNeuronGlobalIndex(const Network& network, const Neuron* targetNeuron);
 
 public:
     /**

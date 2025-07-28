@@ -83,13 +83,23 @@ private:
     
     //-------------------------------------------------------------
     //【函数名称】parseActivationFunction
-    //【函数功能】从字符串解析激活函数
+    //【函数功能】根据名称解析激活函数
     //【参数】functionName：激活函数名称
     //【返回值】std::unique_ptr<ActivationFunction>，激活函数对象指针
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
     std::unique_ptr<ActivationFunction> parseActivationFunction(const std::string& functionName);
+    
+    //-------------------------------------------------------------
+    //【函数名称】findNeuronByGlobalIndex
+    //【函数功能】根据全局索引查找神经元
+    //【参数】network：网络引用，globalIndex：全局索引
+    //【返回值】Neuron*，找到的神经元指针，未找到返回nullptr
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    Neuron* findNeuronByGlobalIndex(Network& network, int globalIndex);
 
 public:
     //-------------------------------------------------------------

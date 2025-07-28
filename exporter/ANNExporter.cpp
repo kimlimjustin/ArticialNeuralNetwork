@@ -117,9 +117,8 @@ std::string ANNExporter::getExporterName() const {
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNExporter::writeNetworkHeader(std::ofstream& file, const Network& network) {
-    writeComment(file, "Network Header");
-    file << "NETWORK " << network.getName() << std::endl;
-    file << std::endl;
+    writeComment(file, network.getName());
+    file << "G " << network.getName() << std::endl;
     return file.good();
 }
 
@@ -132,24 +131,55 @@ bool ANNExporter::writeNetworkHeader(std::ofstream& file, const Network& network
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNExporter::writeLayerInformation(std::ofstream& file, const Network& network) {
-    writeComment(file, "Layer Information");
-    file << "LAYERS " << network.getLayerCount() << std::endl;
-    file << std::endl;
+    writeComment(file, "Six Neurons: zero bias, without activation function");
     
+    // First, write all neurons
+    int neuronIndex = 0;
     for (int i = 0; i < network.getLayerCount(); ++i) {
         const Layer* layer = network.getLayer(i);
         if (!layer) {
             return false;
         }
         
-        writeComment(file, "Layer " + std::to_string(i));
-        file << "LAYER " << layer->getNeuronCount() << std::endl;
-        
-        if (!writeNeuronInformation(file, *layer)) {
+        for (int j = 0; j < layer->getNeuronCount(); ++j) {
+            const Neuron* neuron = layer->getNeuron(j);
+            if (!neuron) {
+                return false;
+            }
+            
+            // Write neuron: N bias activation_type
+            file << "N " << std::fixed << std::setprecision(1) << neuron->getBias() << " ";
+            
+            // Determine activation type (0 for linear/no activation)
+            const ActivationFunction* activationFunc = neuron->getActivationFunction();
+            int activationType = 0; // Default to linear
+            if (activationFunc && activationFunc->getName() != "Linear") {
+                // For now, map all non-linear to type 1, can be extended
+                activationType = 1;
+            }
+            file << activationType << std::endl;
+            
+            neuronIndex++;
+        }
+    }
+    
+    // Then, write layer definitions
+    neuronIndex = 0;
+    for (int i = 0; i < network.getLayerCount(); ++i) {
+        const Layer* layer = network.getLayer(i);
+        if (!layer) {
             return false;
         }
         
-        file << std::endl;
+        writeComment(file, "Layer " + std::to_string(i) + ": Neuron " + 
+                    std::to_string(neuronIndex) + " to " + 
+                    std::to_string(neuronIndex + layer->getNeuronCount() - 1));
+        
+        int startNeuron = neuronIndex;
+        int endNeuron = neuronIndex + layer->getNeuronCount() - 1;
+        file << "L " << startNeuron << " " << endNeuron << std::endl;
+        
+        neuronIndex += layer->getNeuronCount();
     }
     
     return file.good();
@@ -192,12 +222,35 @@ bool ANNExporter::writeNeuronInformation(std::ofstream& file, const Layer& layer
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNExporter::writeConnections(std::ofstream& file, const Network& network) {
-    writeComment(file, "Connection Information");
+    // First write input connections (from external input to first layer)
+    const Layer* firstLayer = network.getLayer(0);
+    if (firstLayer) {
+        writeComment(file, "Neuron 0 to " + std::to_string(firstLayer->getNeuronCount() - 1) + ": has one Dendrite");
+        for (int i = 0; i < firstLayer->getNeuronCount(); ++i) {
+            file << "S -1 " << i << " 1.0" << std::endl;
+        }
+    }
     
-    // Count total connections
-    int totalConnections = 0;
-    std::ostringstream connectionData;
+    // Write output connections (from last layer to external output)
+    const Layer* lastLayer = network.getLayer(network.getLayerCount() - 1);
+    if (lastLayer) {
+        int lastLayerStart = 0;
+        for (int i = 0; i < network.getLayerCount() - 1; ++i) {
+            const Layer* layer = network.getLayer(i);
+            if (layer) {
+                lastLayerStart += layer->getNeuronCount();
+            }
+        }
+        
+        writeComment(file, "Neuron " + std::to_string(lastLayerStart) + " to " + 
+                    std::to_string(lastLayerStart + lastLayer->getNeuronCount() - 1) + ": has one Axon");
+        for (int i = 0; i < lastLayer->getNeuronCount(); ++i) {
+            file << "S " << (lastLayerStart + i) << " -1 1.0" << std::endl;
+        }
+    }
     
+    // Write inter-layer connections
+    int currentNeuronOffset = 0;
     for (int layerIndex = 0; layerIndex < network.getLayerCount(); ++layerIndex) {
         const Layer* layer = network.getLayer(layerIndex);
         if (!layer) continue;
@@ -206,38 +259,43 @@ bool ANNExporter::writeConnections(std::ofstream& file, const Network& network) 
             const Neuron* neuron = layer->getNeuron(neuronIndex);
             if (!neuron) continue;
             
-            // Write output connections
-            for (int synapseIndex = 0; synapseIndex < neuron->getOutputSynapseCount(); ++synapseIndex) {
-                const Synapse* synapse = neuron->getOutputSynapse(synapseIndex);
-                if (!synapse) continue;
+            int globalNeuronIndex = currentNeuronOffset + neuronIndex;
+            
+            // Write output connections for this neuron
+            if (neuron->getOutputSynapseCount() > 0) {
+                // Find target layer neurons
+                int targetLayerStart = currentNeuronOffset + layer->getNeuronCount();
                 
-                const Neuron* targetNeuron = synapse->getTargetNeuron();
-                if (!targetNeuron) continue;
+                // Add comment for this neuron's connections if it's not the last layer
+                if (layerIndex < network.getLayerCount() - 1) {
+                    const Layer* nextLayer = network.getLayer(layerIndex + 1);
+                    if (nextLayer) {
+                        writeComment(file, "Dendrites from Neuron " + std::to_string(globalNeuronIndex) + 
+                                    " to Neuron " + std::to_string(targetLayerStart) + "~" + 
+                                    std::to_string(targetLayerStart + nextLayer->getNeuronCount() - 1));
+                    }
+                }
                 
-                // Find target neuron's layer and index
-                bool found = false;
-                for (int targetLayerIndex = 0; targetLayerIndex < network.getLayerCount() && !found; ++targetLayerIndex) {
-                    const Layer* targetLayer = network.getLayer(targetLayerIndex);
-                    if (!targetLayer) continue;
+                for (int synapseIndex = 0; synapseIndex < neuron->getOutputSynapseCount(); ++synapseIndex) {
+                    const Synapse* synapse = neuron->getOutputSynapse(synapseIndex);
+                    if (!synapse) continue;
                     
-                    for (int targetNeuronIndex = 0; targetNeuronIndex < targetLayer->getNeuronCount(); ++targetNeuronIndex) {
-                        if (targetLayer->getNeuron(targetNeuronIndex) == targetNeuron) {
-                            connectionData << "CONNECTION " << layerIndex << " " << neuronIndex 
-                                         << " " << targetLayerIndex << " " << targetNeuronIndex 
-                                         << " " << std::fixed << std::setprecision(6) << synapse->getWeight() 
-                                         << std::endl;
-                            totalConnections++;
-                            found = true;
-                            break;
-                        }
+                    const Neuron* targetNeuron = synapse->getTargetNeuron();
+                    if (!targetNeuron) continue;
+                    
+                    // Find the global index of the target neuron
+                    int targetGlobalIndex = findNeuronGlobalIndex(network, targetNeuron);
+                    if (targetGlobalIndex >= 0) {
+                        file << "S " << globalNeuronIndex << " " << targetGlobalIndex 
+                             << " " << std::fixed << std::setprecision(4) << synapse->getWeight() 
+                             << std::endl;
                     }
                 }
             }
         }
+        
+        currentNeuronOffset += layer->getNeuronCount();
     }
-    
-    file << "CONNECTIONS " << totalConnections << std::endl;
-    file << connectionData.str();
     
     return file.good();
 }
@@ -267,4 +325,30 @@ std::string ANNExporter::getActivationFunctionName(const ActivationFunction* act
         return "Linear";
     }
     return activationFunction->getName();
+}
+
+//-------------------------------------------------------------
+//【函数名称】findNeuronGlobalIndex
+//【函数功能】查找神经元的全局索引
+//【参数】network：网络引用，targetNeuron：目标神经元指针
+//【返回值】int，全局索引，未找到返回-1
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+int ANNExporter::findNeuronGlobalIndex(const Network& network, const Neuron* targetNeuron) {
+    int globalIndex = 0;
+    
+    for (int layerIndex = 0; layerIndex < network.getLayerCount(); ++layerIndex) {
+        const Layer* layer = network.getLayer(layerIndex);
+        if (!layer) continue;
+        
+        for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
+            if (layer->getNeuron(neuronIndex) == targetNeuron) {
+                return globalIndex;
+            }
+            globalIndex++;
+        }
+    }
+    
+    return -1; // Not found
 }
