@@ -1,0 +1,415 @@
+//-------------------------------------------------------------
+//【文件名】NetworkController.cpp
+//【功能模块和目的】神经网络控制器（单例）实现
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+
+#include "NetworkController.h"
+#include "../importer/ANNImporter.h"
+#include "../exporter/ANNExporter.h"
+#include <stdexcept>
+#include <sstream>
+
+NetworkController* NetworkController::m_instance = nullptr;
+
+//-------------------------------------------------------------
+//【函数名称】NetworkController
+//【函数功能】构造函数
+//【参数】无
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+NetworkController::NetworkController() : m_network(nullptr) {
+}
+
+//-------------------------------------------------------------
+//【函数名称】~NetworkController
+//【函数功能】析构函数
+//【参数】无
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+NetworkController::~NetworkController() {
+}
+
+//-------------------------------------------------------------
+//【函数名称】getInstance
+//【函数功能】获取单例实例
+//【参数】无
+//【返回值】NetworkController&，单例引用
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+NetworkController& NetworkController::getInstance() {
+    if (m_instance == nullptr) {
+        m_instance = new NetworkController();
+    }
+    return *m_instance;
+}
+
+//-------------------------------------------------------------
+//【函数名称】importNetwork
+//【函数功能】导入神经网络
+//【参数】filename：文件名
+//【返回值】bool，是否导入成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::importNetwork(const std::string& filename) {
+    try {
+        ANNImporter importer;
+        m_network = importer.importNetwork(filename);
+        return m_network != nullptr;
+    }
+    catch (const std::exception&) {
+        m_network = nullptr;
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】exportNetwork
+//【函数功能】导出神经网络
+//【参数】filename：文件名
+//【返回值】bool，是否导出成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::exportNetwork(const std::string& filename) const {
+    if (!hasNetwork()) {
+        return false;
+    }
+    
+    try {
+        ANNExporter exporter;
+        return exporter.exportNetwork(*m_network, filename);
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】hasNetwork
+//【函数功能】检查是否存在神经网络
+//【参数】无
+//【返回值】bool，是否存在神经网络
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::hasNetwork() const {
+    return m_network != nullptr;
+}
+
+//-------------------------------------------------------------
+//【函数名称】validateNetwork
+//【函数功能】验证神经网络的有效性
+//【参数】无
+//【返回值】bool，网络是否有效
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::validateNetwork() const {
+    if (!hasNetwork()) {
+        return false;
+    }
+    return m_network->isValid();
+}
+
+//-------------------------------------------------------------
+//【函数名称】getNetworkStatistics
+//【函数功能】获取神经网络统计信息
+//【参数】无
+//【返回值】字符串，统计信息
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+std::string NetworkController::getNetworkStatistics() const {
+    if (!hasNetwork()) {
+        return "No network loaded.";
+    }
+    
+    std::ostringstream oss;
+    oss << "Network Statistics:\n";
+    oss << "  Total Layers: " << m_network->getLayerCount() << "\n";
+    oss << "  Total Neurons: " << m_network->getNeuronCount() << "\n";
+    oss << "  Total Synapses: " << m_network->getSynapseCount() << "\n";
+    oss << "  Valid: " << (m_network->isValid() ? "Yes" : "No");
+    
+    return oss.str();
+}
+
+//-------------------------------------------------------------
+//【函数名称】getLayerInformation
+//【函数功能】获取神经网络层信息
+//【参数】无
+//【返回值】字符串，层信息
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+std::string NetworkController::getLayerInformation() const {
+    if (!hasNetwork()) {
+        return "No network loaded.";
+    }
+    
+    std::ostringstream oss;
+    oss << "Layer Information:\n";
+    
+    for (int i = 0; i < m_network->getLayerCount(); ++i) {
+        const Layer* layer = m_network->getLayer(i);
+        if (layer) {
+            oss << "  Layer " << i << ": " << layer->getNeuronCount() << " neurons\n";
+        }
+    }
+    
+    return oss.str();
+}
+
+//-------------------------------------------------------------
+//【函数名称】getNeuronInformation
+//【函数功能】获取指定层的神经元信息
+//【参数】layerIndex：层索引
+//【返回值】字符串，神经元信息
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+std::string NetworkController::getNeuronInformation(int layerIndex) const {
+    if (!hasNetwork()) {
+        return "No network loaded.";
+    }
+    
+    const Layer* layer = m_network->getLayer(layerIndex);
+    if (!layer) {
+        return "Invalid layer index.";
+    }
+    
+    std::ostringstream oss;
+    oss << "Neurons in Layer " << layerIndex << ":\n";
+    
+    for (int i = 0; i < layer->getNeuronCount(); ++i) {
+        const Neuron* neuron = layer->getNeuron(i);
+        if (neuron) {
+            oss << "  Neuron " << i << ": bias = " << neuron->getBias() << "\n";
+        }
+    }
+    
+    return oss.str();
+}
+
+//-------------------------------------------------------------
+//【函数名称】getNeuronConnections
+//【函数功能】获取神经元连接信息
+//【参数】layerIndex：层索引，neuronIndex：神经元索引
+//【返回值】字符串，连接信息
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+std::string NetworkController::getNeuronConnections(int layerIndex, int neuronIndex) const {
+    if (!hasNetwork()) {
+        return "No network loaded.";
+    }
+    
+    const Layer* layer = m_network->getLayer(layerIndex);
+    if (!layer) {
+        return "Invalid layer index.";
+    }
+    
+    const Neuron* neuron = layer->getNeuron(neuronIndex);
+    if (!neuron) {
+        return "Invalid neuron index.";
+    }
+    
+    std::ostringstream oss;
+    oss << "Connections for Neuron " << neuronIndex << " in Layer " << layerIndex << ":\n";
+    oss << "  Input connections (dendrites): " << neuron->getInputSynapseCount() << "\n";
+    oss << "  Output connections (axon): " << neuron->getOutputSynapseCount() << "\n";
+    
+    // Additional connection details could be added here
+    
+    return oss.str();
+}
+
+//-------------------------------------------------------------
+//【函数名称】addLayer
+//【函数功能】添加一层神经元
+//【参数】无
+//【返回值】bool，是否添加成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::addLayer() {
+    if (!hasNetwork()) {
+        m_network = std::unique_ptr<Network>(new Network());
+    }
+    
+    try {
+        m_network->addLayer(std::unique_ptr<Layer>(new Layer()));
+        return true;
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】deleteLayer
+//【函数功能】删除一层神经元
+//【参数】layerIndex：层索引
+//【返回值】bool，是否删除成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::deleteLayer(int layerIndex) {
+    if (!hasNetwork()) {
+        return false;
+    }
+    
+    try {
+        return m_network->removeLayer(layerIndex);
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】modifyNeuronBias
+//【函数功能】修改神经元的偏置值
+//【参数】layerIndex：层索引，neuronIndex：神经元索引，bias：新的偏置值
+//【返回值】bool，是否修改成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::modifyNeuronBias(int layerIndex, int neuronIndex, double bias) {
+    if (!hasNetwork()) {
+        return false;
+    }
+    
+    Layer* layer = m_network->getLayer(layerIndex);
+    if (!layer) {
+        return false;
+    }
+    
+    Neuron* neuron = layer->getNeuron(neuronIndex);
+    if (!neuron) {
+        return false;
+    }
+    
+    try {
+        neuron->setBias(bias);
+        return true;
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】deleteNeuron
+//【函数功能】删除指定的神经元
+//【参数】layerIndex：层索引，neuronIndex：神经元索引
+//【返回值】bool，是否删除成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::deleteNeuron(int layerIndex, int neuronIndex) {
+    if (!hasNetwork()) {
+        return false;
+    }
+    
+    Layer* layer = m_network->getLayer(layerIndex);
+    if (!layer) {
+        return false;
+    }
+    
+    try {
+        return layer->removeNeuron(neuronIndex);
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】connectNeurons
+//【函数功能】连接两个神经元
+//【参数】fromLayer：源层索引，fromNeuron：源神经元索引，toLayer：目标层索引，toNeuron：目标神经元索引，weight：连接权重
+//【返回值】bool，是否连接成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool NetworkController::connectNeurons(int fromLayer, int fromNeuron, int toLayer, int toNeuron, double weight) {
+    if (!hasNetwork()) {
+        return false;
+    }
+    
+    // Check if layers are adjacent
+    if (toLayer != fromLayer + 1) {
+        return false;
+    }
+    
+    Layer* sourceLayer = m_network->getLayer(fromLayer);
+    Layer* targetLayer = m_network->getLayer(toLayer);
+    
+    if (!sourceLayer || !targetLayer) {
+        return false;
+    }
+    
+    Neuron* sourceNeuron = sourceLayer->getNeuron(fromNeuron);
+    Neuron* targetNeuron = targetLayer->getNeuron(toNeuron);
+    
+    if (!sourceNeuron || !targetNeuron) {
+        return false;
+    }
+    
+    try {
+        return sourceNeuron->connectTo(*targetNeuron, weight);
+    }
+    catch (const std::exception&) {
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
+//【函数名称】getInputSize
+//【函数功能】获取输入层大小
+//【参数】无
+//【返回值】输入大小，失败返回-1
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+int NetworkController::getInputSize() const {
+    if (!hasNetwork()) {
+        return -1;
+    }
+    
+    const Layer* firstLayer = m_network->getLayer(0);
+    if (!firstLayer) {
+        return -1;
+    }
+    
+    return firstLayer->getNeuronCount();
+}
+
+//-------------------------------------------------------------
+//【函数名称】runInference
+//【函数功能】运行推理
+//【参数】inputs：输入数据
+//【返回值】推理结果
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+std::vector<double> NetworkController::runInference(const std::vector<double>& inputs) const {
+    if (!hasNetwork()) {
+        throw std::runtime_error("No network loaded");
+    }
+    
+    if (!m_network->isValid()) {
+        throw std::runtime_error("Network is not valid");
+    }
+    
+    return m_network->predict(inputs);
+}
