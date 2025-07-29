@@ -10,6 +10,8 @@
 
 #include "ActivationFunction.hpp"
 
+using namespace std;
+
 //-------------------------------------------------------------
 //【类名】TanhFunction
 //【功能】双曲正切激活函数实现
@@ -73,21 +75,21 @@ public:
     //【函数名称】getName
     //【函数功能】获取函数名称
     //【参数】无
-    //【返回值】std::string，函数名"Tanh"
+    //【返回值】string，函数名"Tanh"
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getName() const override;
+    string getName() const override;
     
     //-------------------------------------------------------------
     //【函数名称】clone
     //【函数功能】克隆函数对象
     //【参数】无
-    //【返回值】std::unique_ptr<ActivationFunction>，克隆对象
+    //【返回值】unique_ptr<ActivationFunction>，克隆对象
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::unique_ptr<ActivationFunction> clone() const override;
+    unique_ptr<ActivationFunction> clone() const override;
 };
 
 #endif // TanhFunction_hpp

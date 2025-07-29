@@ -1,0 +1,1 @@
+ g++ -std=c++11 -Wall -Wextra -g -o neural_network main.cpp model/activation_functions/*.cpp model/neural_components/*.cpp controller/*.cpp interface/*.cpp utils/*.cpp importer/*.cpp exporter/*.cpp

@@ -1,4 +1,4 @@
 *.pdf
 *.exe
-*.ANN
 *.o
+test_output.ANN

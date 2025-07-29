@@ -278,7 +278,7 @@ bool Neuron::removeOutputSynapse(int index) {
 //-------------------------------------------------------------
 bool Neuron::connectTo(Neuron& targetNeuron, double weight) {
     // Create output synapse for this neuron
-    auto outputSynapse = unique_ptr<Synapse>(new Synapse(1.0, this, &targetNeuron, true)); // Axon with weight 1
+    auto outputSynapse = unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, true)); // Axon with actual weight
     
     // Create input synapse for target neuron
     auto inputSynapse = unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, false)); // Dendrite with specified weight
