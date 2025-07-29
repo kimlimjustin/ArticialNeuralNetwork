@@ -5,9 +5,11 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "Layer.h"
+#include "Layer.hpp"
 #include <stdexcept>
 #include <algorithm>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】Layer
@@ -28,13 +30,13 @@ Layer::Layer() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Layer::Layer(int neuronCount, double bias, std::unique_ptr<ActivationFunction> activationFunction) {
+Layer::Layer(int neuronCount, double bias, unique_ptr<ActivationFunction> activationFunction) {
     for (int i = 0; i < neuronCount; ++i) {
-        std::unique_ptr<ActivationFunction> neuronActivation = nullptr;
+        unique_ptr<ActivationFunction> neuronActivation = nullptr;
         if (activationFunction) {
             neuronActivation = activationFunction->clone();
         }
-        m_neurons.push_back(std::unique_ptr<Neuron>(new Neuron(bias, std::move(neuronActivation))));
+        m_neurons.push_back(unique_ptr<Neuron>(new Neuron(bias, move(neuronActivation))));
     }
 }
 
@@ -48,7 +50,7 @@ Layer::Layer(int neuronCount, double bias, std::unique_ptr<ActivationFunction> a
 //-------------------------------------------------------------
 Layer::Layer(const Layer& other) {
     for (const auto& neuron : other.m_neurons) {
-        m_neurons.push_back(std::unique_ptr<Neuron>(new Neuron(*neuron)));
+        m_neurons.push_back(unique_ptr<Neuron>(new Neuron(*neuron)));
     }
 }
 
@@ -64,7 +66,7 @@ Layer& Layer::operator=(const Layer& other) {
     if (this != &other) {
         m_neurons.clear();
         for (const auto& neuron : other.m_neurons) {
-            m_neurons.push_back(std::unique_ptr<Neuron>(new Neuron(*neuron)));
+            m_neurons.push_back(unique_ptr<Neuron>(new Neuron(*neuron)));
         }
     }
     return *this;
@@ -89,9 +91,9 @@ Layer::~Layer() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Layer::addNeuron(std::unique_ptr<Neuron> neuron) {
+void Layer::addNeuron(unique_ptr<Neuron> neuron) {
     if (neuron) {
-        m_neurons.push_back(std::move(neuron));
+        m_neurons.push_back(move(neuron));
     }
 }
 
@@ -159,16 +161,16 @@ int Layer::getNeuronCount() const {
 //【函数名称】forwardPropagate
 //【函数功能】前向传播（每个神经元独立输入）
 //【参数】inputs：每个神经元的输入集合
-//【返回值】std::vector<double>，所有神经元输出
+//【返回值】vector<double>，所有神经元输出
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<double> Layer::forwardPropagate(const std::vector<std::vector<double>>& inputs) {
+vector<double> Layer::forwardPropagate(const vector<vector<double>>& inputs) {
     if (inputs.size() != m_neurons.size()) {
-        throw std::runtime_error("Input size mismatch with number of neurons");
+        throw runtime_error("Input size mismatch with number of neurons");
     }
     
-    std::vector<double> outputs;
+    vector<double> outputs;
     outputs.reserve(m_neurons.size());
     
     for (size_t i = 0; i < m_neurons.size(); ++i) {
@@ -182,12 +184,12 @@ std::vector<double> Layer::forwardPropagate(const std::vector<std::vector<double
 //【函数名称】forwardPropagateUniform
 //【函数功能】前向传播（所有神经元共用输入）
 //【参数】inputs：统一输入集合
-//【返回值】std::vector<double>，所有神经元输出
+//【返回值】vector<double>，所有神经元输出
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<double> Layer::forwardPropagateUniform(const std::vector<double>& inputs) {
-    std::vector<double> outputs;
+vector<double> Layer::forwardPropagateUniform(const vector<double>& inputs) {
+    vector<double> outputs;
     outputs.reserve(m_neurons.size());
     
     for (auto& neuron : m_neurons) {
@@ -270,7 +272,7 @@ int Layer::getTotalSynapseCount() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool Layer::connectToLayer(Layer& targetLayer, const std::vector<std::vector<double>>& weights) {
+bool Layer::connectToLayer(Layer& targetLayer, const vector<vector<double>>& weights) {
     if (targetLayer.getNeuronCount() == 0) {
         return false;
     }
@@ -283,7 +285,12 @@ bool Layer::connectToLayer(Layer& targetLayer, const std::vector<std::vector<dou
         for (int j = 0; j < targetLayer.getNeuronCount(); ++j) {
             double weight = useProvidedWeights ? weights[i][j] : 1.0; // Default weight
             
-            if (!m_neurons[i]->connectTo(*targetLayer.getNeuron(j), weight)) {
+            Neuron* targetNeuron = targetLayer.getNeuron(j);
+            if (!targetNeuron) {
+                return false; // Invalid target neuron
+            }
+            
+            if (!m_neurons[i]->connectTo(*targetNeuron, weight)) {
                 return false;
             }
         }

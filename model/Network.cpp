@@ -5,12 +5,14 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "Network.h"
+#include "Network.hpp"
 #include <stdexcept>
 #include <sstream>
 #include <algorithm>
 #include <set>
 #include <queue>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】Network
@@ -31,7 +33,7 @@ Network::Network() : m_name("Unnamed Network") {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Network::Network(const std::string& name) : m_name(name) {
+Network::Network(const string& name) : m_name(name) {
 }
 
 //-------------------------------------------------------------
@@ -44,7 +46,7 @@ Network::Network(const std::string& name) : m_name(name) {
 //-------------------------------------------------------------
 Network::Network(const Network& other) : m_name(other.m_name) {
     for (const auto& layer : other.m_layers) {
-        m_layers.push_back(std::unique_ptr<Layer>(new Layer(*layer)));
+        m_layers.push_back(unique_ptr<Layer>(new Layer(*layer)));
     }
 }
 
@@ -61,7 +63,7 @@ Network& Network::operator=(const Network& other) {
         m_name = other.m_name;
         m_layers.clear();
         for (const auto& layer : other.m_layers) {
-            m_layers.push_back(std::unique_ptr<Layer>(new Layer(*layer)));
+            m_layers.push_back(unique_ptr<Layer>(new Layer(*layer)));
         }
     }
     return *this;
@@ -86,7 +88,7 @@ Network::~Network() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-const std::string& Network::getName() const {
+const string& Network::getName() const {
     return m_name;
 }
 
@@ -98,7 +100,7 @@ const std::string& Network::getName() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Network::setName(const std::string& name) {
+void Network::setName(const string& name) {
     m_name = name;
 }
 
@@ -110,9 +112,9 @@ void Network::setName(const std::string& name) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Network::addLayer(std::unique_ptr<Layer> layer) {
+void Network::addLayer(unique_ptr<Layer> layer) {
     if (layer) {
-        m_layers.push_back(std::move(layer));
+        m_layers.push_back(move(layer));
     }
 }
 
@@ -260,25 +262,25 @@ bool Network::isValid() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<double> Network::predict(const std::vector<double>& inputs) {
+vector<double> Network::predict(const vector<double>& inputs) {
     if (!isValid()) {
-        throw std::runtime_error("Network is not valid for inference");
+        throw runtime_error("Network is not valid for inference");
     }
     
     if (m_layers.empty()) {
-        throw std::runtime_error("Network has no layers");
+        throw runtime_error("Network has no layers");
     }
     
     // Check input size matches first layer
     if (static_cast<int>(inputs.size()) != m_layers[0]->getNeuronCount()) {
-        throw std::runtime_error("Input size mismatch with first layer neuron count");
+        throw runtime_error("Input size mismatch with first layer neuron count");
     }
     
     // Reset computation state
     resetComputationState();
     
     // Forward propagate through all layers
-    std::vector<double> currentOutputs = inputs;
+    vector<double> currentOutputs = inputs;
     
     for (size_t layerIndex = 0; layerIndex < m_layers.size(); ++layerIndex) {
         Layer* layer = m_layers[layerIndex].get();
@@ -286,7 +288,7 @@ std::vector<double> Network::predict(const std::vector<double>& inputs) {
         if (layerIndex == 0) {
             // For first layer, each neuron gets one input value
             // Check if neurons have input synapses
-            std::vector<std::vector<double>> layerInputs;
+            vector<vector<double>> layerInputs;
             for (int i = 0; i < layer->getNeuronCount(); ++i) {
                 const Neuron* neuron = layer->getNeuron(i);
                 if (neuron && neuron->getInputSynapseCount() > 0) {
@@ -300,7 +302,7 @@ std::vector<double> Network::predict(const std::vector<double>& inputs) {
             currentOutputs = layer->forwardPropagate(layerInputs);
         } else {
             // For subsequent layers, neurons get outputs from previous layer
-            std::vector<std::vector<double>> layerInputs;
+            vector<vector<double>> layerInputs;
             for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
                 const Neuron* neuron = layer->getNeuron(neuronIndex);
                 if (neuron && neuron->getInputSynapseCount() > 0) {
@@ -353,6 +355,7 @@ void Network::clear() {
 //【更改记录】
 //-------------------------------------------------------------
 bool Network::connectAllLayers(double defaultWeight) {
+    (void)defaultWeight; // Suppress unused parameter warning
     if (m_layers.size() < 2) {
         return true; // Nothing to connect
     }
@@ -374,8 +377,8 @@ bool Network::connectAllLayers(double defaultWeight) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string Network::getStructureInfo() const {
-    std::ostringstream oss;
+string Network::getStructureInfo() const {
+    ostringstream oss;
     oss << "Network: " << m_name << "\n";
     oss << "Layers: " << getLayerCount() << "\n";
     oss << "Total Neurons: " << getNeuronCount() << "\n";

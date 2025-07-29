@@ -1,15 +1,17 @@
 //-------------------------------------------------------------
-//【文件名】BaseExporter.h
+//【文件名】BaseExporter.hpp
 //【功能模块和目的】神经网络模型导出基类声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef BASE_EXPORTER_H
-#define BASE_EXPORTER_H
+#ifndef BaseExporter_hpp
+#define BaseExporter_hpp
 
-#include "../model/Network.h"
+#include "../model/Network.hpp"
 #include <string>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【类名】BaseExporter
@@ -20,6 +22,36 @@
 //-------------------------------------------------------------
 class BaseExporter {
 public:
+    //-------------------------------------------------------------
+    //【函数名称】BaseExporter
+    //【函数功能】默认构造函数
+    //【参数】无
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseExporter() = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】BaseExporter（拷贝构造）
+    //【函数功能】拷贝构造函数
+    //【参数】other：被拷贝的导出器
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseExporter(const BaseExporter& other) = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】operator=
+    //【函数功能】赋值运算符重载
+    //【参数】other：赋值来源导出器
+    //【返回值】BaseExporter&，自身引用
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseExporter& operator=(const BaseExporter& other) = default;
+    
     //-------------------------------------------------------------
     //【函数名称】~BaseExporter
     //【函数功能】虚析构函数
@@ -35,12 +67,12 @@ public:
     //【函数功能】导出神经网络到文件
     //【参数】
     //  const Network& network - 要导出的网络
-    //  const std::string& filename - 输出文件路径
+    //  const string& filename - 输出文件路径
     //【返回值】导出成功返回true，失败返回false
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual bool exportNetwork(const Network& network, const std::string& filename) = 0;
+    virtual bool exportNetwork(const Network& network, const string& filename) = 0;
     
     //-------------------------------------------------------------
     //【函数名称】getSupportedExtensions
@@ -49,7 +81,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual std::string getSupportedExtensions() const = 0;
+    virtual string getSupportedExtensions() const = 0;
     
     //-------------------------------------------------------------
     //【函数名称】getExporterName
@@ -58,30 +90,30 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual std::string getExporterName() const = 0;
+    virtual string getExporterName() const = 0;
     
     //-------------------------------------------------------------
     //【函数名称】isFormatSupported
     //【函数功能】检查文件格式是否受支持
     //【参数】
-    //  const std::string& filename - 要检查的文件路径
+    //  const string& filename - 要检查的文件路径
     //【返回值】格式受支持返回true
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual bool isFormatSupported(const std::string& filename) const;
+    virtual bool isFormatSupported(const string& filename) const;
 
 protected:
     //-------------------------------------------------------------
     //【函数名称】getFileExtension
     //【函数功能】从文件名中提取文件扩展名
     //【参数】
-    //  const std::string& filename - 文件路径
+    //  const string& filename - 文件路径
     //【返回值】小写的文件扩展名
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getFileExtension(const std::string& filename) const;
+    string getFileExtension(const string& filename) const;
     
     //-------------------------------------------------------------
     //【函数名称】validateNetworkForExport
@@ -95,4 +127,4 @@ protected:
     bool validateNetworkForExport(const Network& network) const;
 };
 
-#endif // BASE_EXPORTER_H
+#endif // BaseExporter_hpp

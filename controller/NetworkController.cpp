@@ -5,13 +5,13 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "NetworkController.h"
-#include "../importer/ANNImporter.h"
-#include "../exporter/ANNExporter.h"
+#include "NetworkController.hpp"
+#include "../importer/ANNImporter.hpp"
+#include "../exporter/ANNExporter.hpp"
 #include <stdexcept>
 #include <sstream>
 
-NetworkController* NetworkController::m_instance = nullptr;
+std::unique_ptr<NetworkController> NetworkController::m_instance = nullptr;
 
 //-------------------------------------------------------------
 //【函数名称】NetworkController
@@ -45,14 +45,27 @@ NetworkController::~NetworkController() {
 //-------------------------------------------------------------
 NetworkController& NetworkController::getInstance() {
     if (m_instance == nullptr) {
-        m_instance = new NetworkController();
+        m_instance = std::unique_ptr<NetworkController>(new NetworkController());
     }
     return *m_instance;
 }
 
 //-------------------------------------------------------------
+//【函数名称】cleanup
+//【函数功能】清理单例实例
+//【参数】无
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+void NetworkController::cleanup() {
+    m_instance.reset();
+}
+
+//-------------------------------------------------------------
 //【函数名称】importNetwork
-//【函数功能】导入神经网络
+//【函数功能】导入神经网络3
+
 //【参数】filename：文件名
 //【返回值】bool，是否导入成功
 //【开发者及日期】林钲凯 2025-07-27

@@ -1,14 +1,14 @@
 //-------------------------------------------------------------
-//【文件名】NetworkController.h
+//【文件名】NetworkController.hpp
 //【功能模块和目的】神经网络控制器（单例）声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef NETWORK_CONTROLLER_H
-#define NETWORK_CONTROLLER_H
+#ifndef NetworkController_hpp
+#define NetworkController_hpp
 
-#include "../model/Network.h"
+#include "../model/Network.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@
 //-------------------------------------------------------------
 class NetworkController {
 private:
-    static NetworkController* m_instance;  // 单例实例
+    static std::unique_ptr<NetworkController> m_instance;  // 单例实例
     std::unique_ptr<Network> m_network;    // 当前神经网络模型
     
     //-------------------------------------------------------------
@@ -65,6 +65,16 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     static NetworkController& getInstance();
+    
+    //-------------------------------------------------------------
+    //【函数名称】cleanup
+    //【函数功能】清理单例实例
+    //【参数】无
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    static void cleanup();
     
     //-------------------------------------------------------------
     //【函数名称】~NetworkController
@@ -227,4 +237,4 @@ public:
     std::vector<double> runInference(const std::vector<double>& inputs) const;
 };
 
-#endif // NETWORK_CONTROLLER_H
+#endif // NetworkController_hpp

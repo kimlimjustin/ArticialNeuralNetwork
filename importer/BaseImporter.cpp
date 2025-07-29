@@ -5,9 +5,11 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "BaseImporter.h"
-#include "../utils/FileUtils.h"
+#include "BaseImporter.hpp"
+#include "../utils/FileUtils.hpp"
 #include <algorithm>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】isFormatSupported
@@ -17,26 +19,26 @@
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool BaseImporter::isFormatSupported(const std::string& filename) const {
-    std::string extension = getFileExtension(filename);
-    std::string supportedExts = getSupportedExtensions();
+bool BaseImporter::isFormatSupported(const string& filename) const {
+    string extension = getFileExtension(filename);
+    string supportedExts = getSupportedExtensions();
     
     // Convert to lowercase for comparison
-    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-    std::transform(supportedExts.begin(), supportedExts.end(), supportedExts.begin(), ::tolower);
+    transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+    transform(supportedExts.begin(), supportedExts.end(), supportedExts.begin(), ::tolower);
     
-    return supportedExts.find(extension) != std::string::npos;
+    return supportedExts.find(extension) != string::npos;
 }
 
 //-------------------------------------------------------------
 //【函数名称】getFileExtension
 //【函数功能】获取文件扩展名
 //【参数】filename：文件名
-//【返回值】std::string，扩展名
+//【返回值】string，扩展名
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string BaseImporter::getFileExtension(const std::string& filename) const {
+string BaseImporter::getFileExtension(const string& filename) const {
     return FileUtils::getFileExtension(filename);
 }
 

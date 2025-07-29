@@ -1,15 +1,18 @@
 //-------------------------------------------------------------
-//【文件名】ANNExporter.h
+//【文件名】ANNExporter.hpp
 //【功能模块和目的】ANN格式神经网络模型导出器声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef ANN_EXPORTER_H
-#define ANN_EXPORTER_H
+#ifndef AnnExporter_hpp
+#define AnnExporter_hpp
 
-#include "BaseExporter.h"
+#include "BaseExporter.hpp"
+#include "../model/ActivationFunction.hpp"
 #include <fstream>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【类名】ANNExporter
@@ -26,7 +29,7 @@ private:
      * @param network Network to export
      * @return True if header written successfully
      */
-    bool writeNetworkHeader(std::ofstream& file, const Network& network);
+    bool writeNetworkHeader(ofstream& file, const Network& network);
     
     /**
      * @brief Write layer information
@@ -34,7 +37,7 @@ private:
      * @param network Network to export
      * @return True if layers written successfully
      */
-    bool writeLayerInformation(std::ofstream& file, const Network& network);
+    bool writeLayerInformation(ofstream& file, const Network& network);
     
     /**
      * @brief Write neuron information for a layer
@@ -42,7 +45,7 @@ private:
      * @param layer Layer to export
      * @return True if neurons written successfully
      */
-    bool writeNeuronInformation(std::ofstream& file, const Layer& layer);
+    bool writeNeuronInformation(ofstream& file, const Layer& layer);
     
     /**
      * @brief Write synapse connections
@@ -50,21 +53,21 @@ private:
      * @param network Network to export
      * @return True if connections written successfully
      */
-    bool writeConnections(std::ofstream& file, const Network& network);
+    bool writeConnections(ofstream& file, const Network& network);
     
     /**
      * @brief Write comment to file
      * @param file Output file stream
      * @param comment Comment text
      */
-    void writeComment(std::ofstream& file, const std::string& comment);
+    void writeComment(ofstream& file, const string& comment);
     
     /**
      * @brief Get activation function name
      * @param activationFunction Activation function pointer
      * @return Function name string
      */
-    std::string getActivationFunctionName(const ActivationFunction* activationFunction);
+    string getActivationFunctionName(const ActivationFunction* activationFunction) const;
     
     /**
      * @brief Find the global index of a neuron in the network
@@ -80,6 +83,26 @@ public:
      */
     ANNExporter();
     
+    //-------------------------------------------------------------
+    //【函数名称】ANNExporter（拷贝构造）
+    //【函数功能】拷贝构造函数
+    //【参数】other：被拷贝的ANN导出器
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    ANNExporter(const ANNExporter& other) = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】operator=
+    //【函数功能】赋值运算符重载
+    //【参数】other：赋值来源ANN导出器
+    //【返回值】ANNExporter&，自身引用
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    ANNExporter& operator=(const ANNExporter& other) = default;
+    
     /**
      * @brief Destructor
      */
@@ -91,19 +114,19 @@ public:
      * @param filename Path to output ANN file
      * @return True if export successful
      */
-    bool exportNetwork(const Network& network, const std::string& filename) override;
+    bool exportNetwork(const Network& network, const string& filename) override;
     
     /**
      * @brief Get supported file extensions
      * @return ".ann"
      */
-    std::string getSupportedExtensions() const override;
+    string getSupportedExtensions() const override;
     
     /**
      * @brief Get exporter name
      * @return "ANN Exporter"
      */
-    std::string getExporterName() const override;
+    string getExporterName() const override;
 };
 
-#endif // ANN_EXPORTER_H
+#endif // AnnExporter_hpp

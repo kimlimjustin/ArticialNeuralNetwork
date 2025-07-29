@@ -1,16 +1,19 @@
 //-------------------------------------------------------------
-//【文件名】ANNImporter.h
+//【文件名】ANNImporter.hpp
 //【功能模块和目的】ANN格式神经网络模型导入器声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef ANN_IMPORTER_H
-#define ANN_IMPORTER_H
+#ifndef AnnImporter_hpp
+#define AnnImporter_hpp
 
-#include "BaseImporter.h"
+#include "BaseImporter.hpp"
+#include "../model/ActivationFunction.hpp"
 #include <fstream>
 #include <vector>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【类名】ANNImporter
@@ -29,7 +32,7 @@ private:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool parseNetworkHeader(std::ifstream& file, Network& network);
+    bool parseNetworkHeader(ifstream& file, Network& network);
     
     //-------------------------------------------------------------
     //【函数名称】parseLayerInformation
@@ -39,7 +42,7 @@ private:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool parseLayerInformation(std::ifstream& file, Network& network);
+    bool parseLayerInformation(ifstream& file, Network& network);
     
     //-------------------------------------------------------------
     //【函数名称】parseNeuronInformation
@@ -49,7 +52,7 @@ private:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool parseNeuronInformation(std::ifstream& file, Layer& layer, int neuronCount);
+    bool parseNeuronInformation(ifstream& file, Layer& layer, int neuronCount);
     
     //-------------------------------------------------------------
     //【函数名称】parseConnections
@@ -59,7 +62,7 @@ private:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool parseConnections(std::ifstream& file, Network& network);
+    bool parseConnections(ifstream& file, Network& network);
     
     //-------------------------------------------------------------
     //【函数名称】skipWhitespaceAndComments
@@ -69,27 +72,37 @@ private:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    void skipWhitespaceAndComments(std::ifstream& file);
+    void skipWhitespaceAndComments(ifstream& file);
     
     //-------------------------------------------------------------
     //【函数名称】readToken
     //【函数功能】从文件中读取下一个标记
     //【参数】file：输入文件流
-    //【返回值】std::string，读取的标记字符串
+    //【返回值】string，读取的标记字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string readToken(std::ifstream& file);
+    string readToken(ifstream& file);
     
     //-------------------------------------------------------------
     //【函数名称】parseActivationFunction
     //【函数功能】根据名称解析激活函数
     //【参数】functionName：激活函数名称
-    //【返回值】std::unique_ptr<ActivationFunction>，激活函数对象指针
+    //【返回值】unique_ptr<ActivationFunction>，激活函数对象指针
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::unique_ptr<ActivationFunction> parseActivationFunction(const std::string& functionName);
+    unique_ptr<ActivationFunction> parseActivationFunction(const string& functionName);
+    
+    //-------------------------------------------------------------
+    //【函数名称】createNeuronWithActivation
+    //【函数功能】根据激活函数类型创建神经元
+    //【参数】bias：偏置值，activationType：激活函数类型
+    //【返回值】unique_ptr<Neuron>，创建的神经元指针
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    unique_ptr<Neuron> createNeuronWithActivation(double bias, int activationType);
     
     //-------------------------------------------------------------
     //【函数名称】findNeuronByGlobalIndex
@@ -113,6 +126,26 @@ public:
     ANNImporter();
     
     //-------------------------------------------------------------
+    //【函数名称】ANNImporter（拷贝构造）
+    //【函数功能】拷贝构造函数
+    //【参数】other：被拷贝的ANN导入器
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    ANNImporter(const ANNImporter& other) = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】operator=
+    //【函数功能】赋值运算符重载
+    //【参数】other：赋值来源ANN导入器
+    //【返回值】ANNImporter&，自身引用
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    ANNImporter& operator=(const ANNImporter& other) = default;
+    
+    //-------------------------------------------------------------
     //【函数名称】~ANNImporter
     //【函数功能】析构函数
     //【参数】无
@@ -126,31 +159,31 @@ public:
     //【函数名称】importNetwork
     //【函数功能】从ANN文件导入神经网络
     //【参数】filename：ANN文件路径
-    //【返回值】std::unique_ptr<Network>，导入的网络对象指针
+    //【返回值】unique_ptr<Network>，导入的网络对象指针
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::unique_ptr<Network> importNetwork(const std::string& filename) override;
+    unique_ptr<Network> importNetwork(const string& filename) override;
     
     //-------------------------------------------------------------
     //【函数名称】getSupportedExtensions
     //【函数功能】获取支持的文件扩展名
     //【参数】无
-    //【返回值】std::string，返回".ann"
+    //【返回值】string，返回".ann"
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getSupportedExtensions() const override;
+    string getSupportedExtensions() const override;
     
     //-------------------------------------------------------------
     //【函数名称】getImporterName
     //【函数功能】获取导入器名称
     //【参数】无
-    //【返回值】std::string，返回"ANN Importer"
+    //【返回值】string，返回"ANN Importer"
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getImporterName() const override;
+    string getImporterName() const override;
 };
 
-#endif // ANN_IMPORTER_H
+#endif // AnnImporter_hpp

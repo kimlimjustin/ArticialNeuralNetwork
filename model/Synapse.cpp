@@ -5,8 +5,9 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "Synapse.h"
-#include "Neuron.h"
+#include "Synapse.hpp"
+#include "Neuron.hpp"
+#include <stdexcept>
 
 //-------------------------------------------------------------
 //【函数名称】Synapse
@@ -19,6 +20,11 @@
 Synapse::Synapse(double weight, Neuron* sourceNeuron, Neuron* targetNeuron, bool isAxon)
     : m_weight(isAxon ? 1.0 : weight), m_sourceNeuron(sourceNeuron), 
       m_targetNeuron(targetNeuron), m_isAxon(isAxon) {
+    // 参数验证：确保神经元指针有效
+    if (targetNeuron == nullptr) {
+        throw std::invalid_argument("Target neuron cannot be null");
+    }
+    // 源神经元在某些情况下可以为空（如输入层）
 }
 
 //-------------------------------------------------------------
@@ -136,6 +142,9 @@ void Synapse::setSourceNeuron(Neuron* neuron) {
 //【更改记录】
 //-------------------------------------------------------------
 void Synapse::setTargetNeuron(Neuron* neuron) {
+    if (neuron == nullptr) {
+        throw std::invalid_argument("Target neuron cannot be null");
+    }
     m_targetNeuron = neuron;
 }
 

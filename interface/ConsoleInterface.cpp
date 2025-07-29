@@ -5,11 +5,13 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "ConsoleInterface.h"
-#include "../controller/NetworkController.h"
+#include "ConsoleInterface.hpp"
+#include "../controller/NetworkController.hpp"
 #include <iostream>
 #include <sstream>
 #include <limits>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】ConsoleInterface
@@ -76,8 +78,8 @@ void ConsoleInterface::run() {
                     break;
             }
         }
-        catch (const std::exception& e) {
-            displayError(std::string("Error: ") + e.what());
+        catch (const exception& e) {
+            displayError(string("Error: ") + e.what());
         }
     }
     
@@ -105,14 +107,14 @@ void ConsoleInterface::exit() {
 //【更改记录】
 //-------------------------------------------------------------
 void ConsoleInterface::displayMainMenu() const {
-    std::cout << "\n=== Main Menu ===" << std::endl;
-    std::cout << "1. Import Network" << std::endl;
-    std::cout << "2. Export Network" << std::endl;
-    std::cout << "3. Modify Network" << std::endl;
-    std::cout << "4. Display Statistics" << std::endl;
-    std::cout << "5. Validate Network" << std::endl;
-    std::cout << "6. Run Inference" << std::endl;
-    std::cout << "0. Exit" << std::endl;
+    cout << "\n=== Main Menu ===" << endl;
+    cout << "1. Import Network" << endl;
+    cout << "2. Export Network" << endl;
+    cout << "3. Modify Network" << endl;
+    cout << "4. Display Statistics" << endl;
+    cout << "5. Validate Network" << endl;
+    cout << "6. Run Inference" << endl;
+    cout << "0. Exit" << endl;
 }
 
 //-------------------------------------------------------------
@@ -124,10 +126,10 @@ void ConsoleInterface::displayMainMenu() const {
 //【更改记录】
 //-------------------------------------------------------------
 void ConsoleInterface::displayModificationMenu() const {
-    std::cout << "\n=== Modification Menu ===" << std::endl;
-    std::cout << "1. Layer Operations" << std::endl;
-    std::cout << "2. Neuron Operations" << std::endl;
-    std::cout << "0. Back to Main Menu" << std::endl;
+    cout << "\n=== Modification Menu ===" << endl;
+    cout << "1. Layer Operations" << endl;
+    cout << "2. Neuron Operations" << endl;
+    cout << "0. Back to Main Menu" << endl;
 }
 
 //-------------------------------------------------------------
@@ -139,7 +141,7 @@ void ConsoleInterface::displayModificationMenu() const {
 //【更改记录】
 //-------------------------------------------------------------
 void ConsoleInterface::handleImportNetwork() {
-    std::string filename = getStringInput("Enter filename to import: ");
+    string filename = getStringInput("Enter filename to import: ");
     
     NetworkController& controller = NetworkController::getInstance();
     if (controller.importNetwork(filename)) {
@@ -164,7 +166,7 @@ void ConsoleInterface::handleExportNetwork() {
         return;
     }
     
-    std::string filename = getStringInput("Enter filename to export: ");
+    string filename = getStringInput("Enter filename to export: ");
     
     if (controller.exportNetwork(filename)) {
         displaySuccess("Network exported successfully!");
@@ -225,9 +227,9 @@ void ConsoleInterface::handleDisplayStatistics() {
         return;
     }
     
-    std::string stats = controller.getNetworkStatistics();
+    string stats = controller.getNetworkStatistics();
     displayInfo("Network Statistics:");
-    std::cout << stats << std::endl;
+    cout << stats << endl;
 }
 
 //-------------------------------------------------------------
@@ -279,40 +281,40 @@ void ConsoleInterface::handleInference() {
     }
     
     // Display information about the expected input format
-    displayInfo("Network expects " + std::to_string(inputSize) + " input values.");
+    displayInfo("Network expects " + to_string(inputSize) + " input values.");
     
     // Generate and display an example of input values
-    std::cout << "\nExample input values: ";
+    cout << "\nExample input values: ";
     for (int i = 0; i < inputSize; ++i) {
         if (i == 0) {
-            std::cout << "1.0";
+            cout << "1.0";
         } else if (i == 1) {
-            std::cout << " 0.5";
+            cout << " 0.5";
         } else if (i == 2) {
-            std::cout << " -0.3";
+            cout << " -0.3";
         } else {
-            std::cout << " " << (i % 2 == 0 ? "0.0" : "1.0");
+            cout << " " << (i % 2 == 0 ? "0.0" : "1.0");
         }
     }
-    std::cout << std::endl;
-    std::cout << "Note: Values should be separated by spaces." << std::endl;
-    std::cout << std::endl;
+    cout << endl;
+    cout << "Note: Values should be separated by spaces." << endl;
+    cout << endl;
     
-    std::vector<double> inputs = getDoubleVector("Enter input values", inputSize);
+    vector<double> inputs = getDoubleVector("Enter input values", inputSize);
     
     try {
-        std::vector<double> outputs = controller.runInference(inputs);
+        vector<double> outputs = controller.runInference(inputs);
         
         displaySuccess("Inference completed!");
-        std::cout << "Output values: ";
+        cout << "Output values: ";
         for (size_t i = 0; i < outputs.size(); ++i) {
-            std::cout << outputs[i];
-            if (i < outputs.size() - 1) std::cout << ", ";
+            cout << outputs[i];
+            if (i < outputs.size() - 1) cout << ", ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
-    catch (const std::exception& e) {
-        displayError(std::string("Inference failed: ") + e.what());
+    catch (const exception& e) {
+        displayError(string("Inference failed: ") + e.what());
     }
 }
 
@@ -327,18 +329,18 @@ void ConsoleInterface::handleInference() {
 void ConsoleInterface::handleLayerOperations() {
     NetworkController& controller = NetworkController::getInstance();
     
-    std::cout << "\n=== Layer Operations ===" << std::endl;
-    std::cout << "1. List all layers" << std::endl;
-    std::cout << "2. Add layer" << std::endl;
-    std::cout << "3. Delete layer" << std::endl;
-    std::cout << "0. Back" << std::endl;
+    cout << "\n=== Layer Operations ===" << endl;
+    cout << "1. List all layers" << endl;
+    cout << "2. Add layer" << endl;
+    cout << "3. Delete layer" << endl;
+    cout << "0. Back" << endl;
     
     int choice = getIntInput("Enter your choice: ");
     
     switch (choice) {
         case 1: {
-            std::string layerInfo = controller.getLayerInformation();
-            std::cout << layerInfo << std::endl;
+            string layerInfo = controller.getLayerInformation();
+            cout << layerInfo << endl;
             break;
         }
         case 2: {
@@ -377,21 +379,21 @@ void ConsoleInterface::handleLayerOperations() {
 void ConsoleInterface::handleNeuronOperations() {
     NetworkController& controller = NetworkController::getInstance();
     
-    std::cout << "\n=== Neuron Operations ===" << std::endl;
-    std::cout << "1. List neurons in layer" << std::endl;
-    std::cout << "2. Modify neuron bias" << std::endl;
-    std::cout << "3. Show neuron connections" << std::endl;
-    std::cout << "4. Delete neuron" << std::endl;
-    std::cout << "5. Connect neurons" << std::endl;
-    std::cout << "0. Back" << std::endl;
+    cout << "\n=== Neuron Operations ===" << endl;
+    cout << "1. List neurons in layer" << endl;
+    cout << "2. Modify neuron bias" << endl;
+    cout << "3. Show neuron connections" << endl;
+    cout << "4. Delete neuron" << endl;
+    cout << "5. Connect neurons" << endl;
+    cout << "0. Back" << endl;
     
     int choice = getIntInput("Enter your choice: ");
     
     switch (choice) {
         case 1: {
             int layerIndex = getIntInput("Enter layer index: ");
-            std::string neuronInfo = controller.getNeuronInformation(layerIndex);
-            std::cout << neuronInfo << std::endl;
+            string neuronInfo = controller.getNeuronInformation(layerIndex);
+            cout << neuronInfo << endl;
             break;
         }
         case 2: {
@@ -408,8 +410,8 @@ void ConsoleInterface::handleNeuronOperations() {
         case 3: {
             int layerIndex = getIntInput("Enter layer index: ");
             int neuronIndex = getIntInput("Enter neuron index: ");
-            std::string connectionInfo = controller.getNeuronConnections(layerIndex, neuronIndex);
-            std::cout << connectionInfo << std::endl;
+            string connectionInfo = controller.getNeuronConnections(layerIndex, neuronIndex);
+            cout << connectionInfo << endl;
             break;
         }
         case 4: {
@@ -448,14 +450,14 @@ void ConsoleInterface::handleNeuronOperations() {
 //【函数名称】getStringInput
 //【函数功能】获取用户字符串输入
 //【参数】prompt：提示信息
-//【返回值】std::string，用户输入的字符串
+//【返回值】string，用户输入的字符串
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string ConsoleInterface::getStringInput(const std::string& prompt) const {
-    std::cout << prompt;
-    std::string input;
-    std::getline(std::cin, input);
+string ConsoleInterface::getStringInput(const string& prompt) const {
+    cout << prompt;
+    string input;
+    getline(cin, input);
     return input;
 }
 
@@ -467,13 +469,13 @@ std::string ConsoleInterface::getStringInput(const std::string& prompt) const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-int ConsoleInterface::getIntInput(const std::string& prompt) const {
+int ConsoleInterface::getIntInput(const string& prompt) const {
     while (true) {
-        std::cout << prompt;
-        std::string input;
-        std::getline(std::cin, input);
+        cout << prompt;
+        string input;
+        getline(cin, input);
         
-        std::istringstream iss(input);
+        istringstream iss(input);
         int value;
         if (iss >> value && iss.eof()) {
             return value;
@@ -491,13 +493,13 @@ int ConsoleInterface::getIntInput(const std::string& prompt) const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-double ConsoleInterface::getDoubleInput(const std::string& prompt) const {
+double ConsoleInterface::getDoubleInput(const string& prompt) const {
     while (true) {
-        std::cout << prompt;
-        std::string input;
-        std::getline(std::cin, input);
+        cout << prompt;
+        string input;
+        getline(cin, input);
         
-        std::istringstream iss(input);
+        istringstream iss(input);
         double value;
         if (iss >> value && iss.eof()) {
             return value;
@@ -511,17 +513,17 @@ double ConsoleInterface::getDoubleInput(const std::string& prompt) const {
 //【函数名称】getDoubleVector
 //【函数功能】获取用户浮点数向量输入
 //【参数】prompt：提示信息，size：预期数值个数
-//【返回值】std::vector<double>，浮点数向量
+//【返回值】vector<double>，浮点数向量
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<double> ConsoleInterface::getDoubleVector(const std::string& prompt, int size) const {
-    std::vector<double> values;
-    std::cout << prompt << " (" << size << " values separated by spaces): ";
+vector<double> ConsoleInterface::getDoubleVector(const string& prompt, int size) const {
+    vector<double> values;
+    cout << prompt << " (" << size << " values separated by spaces): ";
     
-    std::string input;
-    std::getline(std::cin, input);
-    std::istringstream iss(input);
+    string input;
+    getline(cin, input);
+    istringstream iss(input);
     
     double value;
     while (iss >> value && values.size() < static_cast<size_t>(size)) {
@@ -529,7 +531,7 @@ std::vector<double> ConsoleInterface::getDoubleVector(const std::string& prompt,
     }
     
     if (values.size() != static_cast<size_t>(size)) {
-        displayError("Invalid number of values. Expected " + std::to_string(size));
+        displayError("Invalid number of values. Expected " + to_string(size));
         return getDoubleVector(prompt, size); // Retry
     }
     
@@ -544,8 +546,8 @@ std::vector<double> ConsoleInterface::getDoubleVector(const std::string& prompt,
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void ConsoleInterface::displayError(const std::string& message) const {
-    std::cerr << "[ERROR] " << message << std::endl;
+void ConsoleInterface::displayError(const string& message) const {
+    cerr << "[ERROR] " << message << endl;
 }
 
 //-------------------------------------------------------------
@@ -556,8 +558,8 @@ void ConsoleInterface::displayError(const std::string& message) const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void ConsoleInterface::displaySuccess(const std::string& message) const {
-    std::cout << "[SUCCESS] " << message << std::endl;
+void ConsoleInterface::displaySuccess(const string& message) const {
+    cout << "[SUCCESS] " << message << endl;
 }
 
 //-------------------------------------------------------------
@@ -568,8 +570,8 @@ void ConsoleInterface::displaySuccess(const std::string& message) const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void ConsoleInterface::displayInfo(const std::string& message) const {
-    std::cout << "[INFO] " << message << std::endl;
+void ConsoleInterface::displayInfo(const string& message) const {
+    cout << "[INFO] " << message << endl;
 }
 
 

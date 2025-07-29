@@ -1,17 +1,19 @@
 //-------------------------------------------------------------
-//【文件名】Neuron.h
+//【文件名】Neuron.hpp
 //【功能模块和目的】神经元类声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef NEURON_H
-#define NEURON_H
+#ifndef Neuron_hpp
+#define Neuron_hpp
 
-#include "Synapse.h"
-#include "ActivationFunction.h"
+#include "Synapse.hpp"
+#include "ActivationFunction.hpp"
 #include <vector>
 #include <memory>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【类名】Neuron
@@ -23,9 +25,9 @@
 class Neuron {
 private:
     double m_bias;
-    std::vector<std::unique_ptr<Synapse>> m_inputSynapses;
-    std::vector<std::unique_ptr<Synapse>> m_outputSynapses;
-    std::unique_ptr<ActivationFunction> m_activationFunction;
+    vector<unique_ptr<Synapse>> m_inputSynapses;
+    vector<unique_ptr<Synapse>> m_outputSynapses;
+    unique_ptr<ActivationFunction> m_activationFunction;
     double m_lastOutput;
     bool m_hasComputedOutput;
 public:
@@ -37,7 +39,8 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    explicit Neuron(double bias = 0.0, std::unique_ptr<ActivationFunction> activationFunction = nullptr);
+    explicit Neuron(double bias = 0.0, unique_ptr<ActivationFunction> activationFunction = nullptr);
+    
     //-------------------------------------------------------------
     //【函数名称】Neuron（拷贝构造）
     //【函数功能】拷贝构造函数
@@ -47,6 +50,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     Neuron(const Neuron& other);
+    
     //-------------------------------------------------------------
     //【函数名称】operator=
     //【函数功能】赋值运算符重载
@@ -56,6 +60,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     Neuron& operator=(const Neuron& other);
+    
     //-------------------------------------------------------------
     //【函数名称】~Neuron
     //【函数功能】析构函数
@@ -65,6 +70,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     ~Neuron();
+    
     //-------------------------------------------------------------
     //【函数名称】getBias
     //【函数功能】获取神经元偏置
@@ -74,6 +80,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     double getBias() const;
+    
     //-------------------------------------------------------------
     //【函数名称】setBias
     //【函数功能】设置神经元偏置
@@ -83,6 +90,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     void setBias(double bias);
+    
     //-------------------------------------------------------------
     //【函数名称】getActivationFunction
     //【函数功能】获取激活函数指针
@@ -92,6 +100,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     const ActivationFunction* getActivationFunction() const;
+
     //-------------------------------------------------------------
     //【函数名称】setActivationFunction
     //【函数功能】设置激活函数
@@ -100,7 +109,8 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    void setActivationFunction(std::unique_ptr<ActivationFunction> activationFunction);
+    void setActivationFunction(unique_ptr<ActivationFunction> activationFunction);
+
     //-------------------------------------------------------------
     //【函数名称】addInputSynapse
     //【函数功能】添加输入突触（树突）
@@ -109,7 +119,8 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    void addInputSynapse(std::unique_ptr<Synapse> synapse);
+    void addInputSynapse(unique_ptr<Synapse> synapse);
+
     //-------------------------------------------------------------
     //【函数名称】addOutputSynapse
     //【函数功能】添加输出突触（轴突分支）
@@ -118,7 +129,8 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    void addOutputSynapse(std::unique_ptr<Synapse> synapse);
+    void addOutputSynapse(unique_ptr<Synapse> synapse);
+
     //-------------------------------------------------------------
     //【函数名称】getInputSynapseCount
     //【函数功能】获取输入突触数量
@@ -128,6 +140,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     int getInputSynapseCount() const;
+
     //-------------------------------------------------------------
     //【函数名称】getOutputSynapseCount
     //【函数功能】获取输出突触数量
@@ -137,6 +150,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     int getOutputSynapseCount() const;
+
     //-------------------------------------------------------------
     //【函数名称】getInputSynapse
     //【函数功能】获取指定输入突触指针
@@ -146,6 +160,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     const Synapse* getInputSynapse(int index) const;
+
     //-------------------------------------------------------------
     //【函数名称】getOutputSynapse
     //【函数功能】获取指定输出突触指针
@@ -155,6 +170,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     const Synapse* getOutputSynapse(int index) const;
+
     //-------------------------------------------------------------
     //【函数名称】removeInputSynapse
     //【函数功能】移除指定输入突触
@@ -164,6 +180,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool removeInputSynapse(int index);
+
     //-------------------------------------------------------------
     //【函数名称】removeOutputSynapse
     //【函数功能】移除指定输出突触
@@ -173,6 +190,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool removeOutputSynapse(int index);
+
     //-------------------------------------------------------------
     //【函数名称】connectTo
     //【函数功能】连接到目标神经元
@@ -182,6 +200,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool connectTo(Neuron& targetNeuron, double weight);
+
     //-------------------------------------------------------------
     //【函数名称】computeOutput
     //【函数功能】计算神经元输出
@@ -190,7 +209,8 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    double computeOutput(const std::vector<double>& inputs);
+    double computeOutput(const vector<double>& inputs);
+
     //-------------------------------------------------------------
     //【函数名称】getLastOutput
     //【函数功能】获取上一次输出值
@@ -200,6 +220,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     double getLastOutput() const;
+
     //-------------------------------------------------------------
     //【函数名称】hasValidOutput
     //【函数功能】判断输出值是否有效
@@ -209,6 +230,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool hasValidOutput() const;
+
     //-------------------------------------------------------------
     //【函数名称】resetComputationState
     //【函数功能】重置计算状态
@@ -218,6 +240,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     void resetComputationState();
+
     //-------------------------------------------------------------
     //【函数名称】isValid
     //【函数功能】判断神经元结构是否合法
@@ -227,6 +250,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool isValid() const;
+
     //-------------------------------------------------------------
     //【函数名称】disconnectAll
     //【函数功能】断开所有突触连接
@@ -238,4 +262,4 @@ public:
     void disconnectAll();
 };
 
-#endif // NEURON_H
+#endif // Neuron_hpp

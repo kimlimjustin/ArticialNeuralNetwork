@@ -5,13 +5,15 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "ANNImporter.h"
-#include "../model/ActivationFunction.h"
-#include "../utils/FileUtils.h"
+#include "ANNImporter.hpp"
+#include "../model/ActivationFunction.hpp"
+#include "../utils/FileUtils.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】ANNImporter
@@ -39,21 +41,21 @@ ANNImporter::~ANNImporter() {
 //【函数名称】importNetwork
 //【函数功能】导入神经网络
 //【参数】filename：文件名
-//【返回值】std::unique_ptr<Network>，导入的网络指针
+//【返回值】unique_ptr<Network>，导入的网络指针
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::unique_ptr<Network> ANNImporter::importNetwork(const std::string& filename) {
+unique_ptr<Network> ANNImporter::importNetwork(const string& filename) {
     if (!isFormatSupported(filename)) {
         return nullptr;
     }
     
-    std::ifstream file(filename);
+    ifstream file(filename);
     if (!file.is_open()) {
         return nullptr;
     }
     
-    auto network = std::unique_ptr<Network>(new Network());
+    auto network = unique_ptr<Network>(new Network());
     
     try {
         // Parse network header
@@ -78,7 +80,7 @@ std::unique_ptr<Network> ANNImporter::importNetwork(const std::string& filename)
         
         return network;
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return nullptr;
     }
 }
@@ -91,7 +93,7 @@ std::unique_ptr<Network> ANNImporter::importNetwork(const std::string& filename)
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string ANNImporter::getSupportedExtensions() const {
+string ANNImporter::getSupportedExtensions() const {
     return ".ann";
 }
 
@@ -103,7 +105,7 @@ std::string ANNImporter::getSupportedExtensions() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string ANNImporter::getImporterName() const {
+string ANNImporter::getImporterName() const {
     return "ANN Importer";
 }
 
@@ -115,11 +117,11 @@ std::string ANNImporter::getImporterName() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
-    std::string line;
+bool ANNImporter::parseNetworkHeader(ifstream& file, Network& network) {
+    string line;
     
     // Read lines until we find the network name or end of file
-    while (std::getline(file, line)) {
+    while (getline(file, line)) {
         // Skip empty lines and comments
         if (line.empty() || line[0] == '#') {
             continue;
@@ -127,8 +129,9 @@ bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
         
         // Check for network name starting with 'G'
         if (line[0] == 'G') {
-            std::istringstream iss(line);
-            std::string prefix, networkName;
+            istringstream iss(line);
+            string prefix;
+            string networkName;
             if (iss >> prefix >> networkName) {
                 network.setName(networkName);
             }
@@ -136,7 +139,7 @@ bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
         }
         
         // If we encounter other data, seek back and return
-        file.seekg(static_cast<std::streamoff>(-static_cast<std::streamoff>(line.length() + 1)), std::ios::cur);
+        file.seekg(static_cast<streamoff>(-static_cast<streamoff>(line.length() + 1)), ios::cur);
         return true;
     }
     
@@ -151,22 +154,22 @@ bool ANNImporter::parseNetworkHeader(std::ifstream& file, Network& network) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool ANNImporter::parseLayerInformation(std::ifstream& file, Network& network) {
-    std::string line;
-    std::vector<std::pair<double, int>> neurons; // bias, activation function type
-    std::vector<std::pair<int, int>> layers; // start neuron, end neuron
+bool ANNImporter::parseLayerInformation(ifstream& file, Network& network) {
+    string line;
+    vector<pair<double, int>> neurons; // bias, activation function type
+    vector<pair<int, int>> layers; // start neuron, end neuron
     
     // Reset file position to beginning
     file.clear();
-    file.seekg(0, std::ios::beg);
+    file.seekg(0, ios::beg);
     
     // First pass: collect neuron and layer information
-    while (std::getline(file, line)) {
+    while (getline(file, line)) {
         if (line.empty() || line[0] == '#') {
             continue;
         }
         
-        std::istringstream iss(line);
+        istringstream iss(line);
         char prefix;
         iss >> prefix;
         
@@ -180,7 +183,8 @@ bool ANNImporter::parseLayerInformation(std::ifstream& file, Network& network) {
         }
         else if (prefix == 'L') {
             // Layer definition: L start_neuron end_neuron
-            int startNeuron, endNeuron;
+            int startNeuron;
+            int endNeuron;
             if (iss >> startNeuron >> endNeuron) {
                 layers.push_back({startNeuron, endNeuron});
             }
@@ -189,27 +193,16 @@ bool ANNImporter::parseLayerInformation(std::ifstream& file, Network& network) {
     
     // Create layers and neurons
     for (const auto& layerInfo : layers) {
-        auto layer = std::make_unique<Layer>();
+        unique_ptr<Layer> layer(new Layer());
         
         for (int i = layerInfo.first; i <= layerInfo.second; ++i) {
             if (i >= 0 && i < static_cast<int>(neurons.size())) {
-                auto neuron = std::make_unique<Neuron>();
-                neuron->setBias(neurons[i].first);
-                
-                // Set activation function based on type
-                if (neurons[i].second == 0) {
-                    // Type 0 = Linear (no activation)
-                    neuron->setActivationFunction(createActivationFunction("Linear"));
-                } else {
-                    // Default to linear for unknown types
-                    neuron->setActivationFunction(createActivationFunction("Linear"));
-                }
-                
-                layer->addNeuron(std::move(neuron));
+                auto neuron = createNeuronWithActivation(neurons[i].first, neurons[i].second);
+                layer->addNeuron(move(neuron));
             }
         }
         
-        network.addLayer(std::move(layer));
+        network.addLayer(move(layer));
     }
     
     return !layers.empty();
@@ -223,11 +216,11 @@ bool ANNImporter::parseLayerInformation(std::ifstream& file, Network& network) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool ANNImporter::parseNeuronInformation(std::ifstream& file, Layer& layer, int neuronCount) {
+bool ANNImporter::parseNeuronInformation(ifstream& file, Layer& layer, int neuronCount) {
     for (int i = 0; i < neuronCount; ++i) {
         skipWhitespaceAndComments(file);
         
-        std::string token = readToken(file);
+        string token = readToken(file);
         if (token != "NEURON") {
             return false;
         }
@@ -240,19 +233,19 @@ bool ANNImporter::parseNeuronInformation(std::ifstream& file, Layer& layer, int 
         }
         
         // Read activation function (optional)
-        std::unique_ptr<ActivationFunction> activationFunc = nullptr;
+        unique_ptr<ActivationFunction> activationFunc = nullptr;
         token = readToken(file);
         if (token == "ACTIVATION") {
-            std::string funcName = readToken(file);
+            string funcName = readToken(file);
             activationFunc = parseActivationFunction(funcName);
         } else {
             // Put token back
-            file.seekg(static_cast<std::streamoff>(-static_cast<std::streamoff>(token.length())), std::ios::cur);
+            file.seekg(static_cast<streamoff>(-static_cast<streamoff>(token.length())), ios::cur);
         }
         
         // Create neuron
-        auto neuron = std::unique_ptr<Neuron>(new Neuron(bias, std::move(activationFunc)));
-        layer.addNeuron(std::move(neuron));
+        auto neuron = unique_ptr<Neuron>(new Neuron(bias, move(activationFunc)));
+        layer.addNeuron(move(neuron));
     }
     
     return true;
@@ -266,25 +259,26 @@ bool ANNImporter::parseNeuronInformation(std::ifstream& file, Layer& layer, int 
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool ANNImporter::parseConnections(std::ifstream& file, Network& network) {
-    std::string line;
+bool ANNImporter::parseConnections(ifstream& file, Network& network) {
+    string line;
     
     // Reset file position to beginning  
     file.clear();
-    file.seekg(0, std::ios::beg);
+    file.seekg(0, ios::beg);
     
     // Parse synapse connections with format: S from_neuron to_neuron weight
-    while (std::getline(file, line)) {
+    while (getline(file, line)) {
         if (line.empty() || line[0] == '#') {
             continue;
         }
         
-        std::istringstream iss(line);
+        istringstream iss(line);
         char prefix;
         iss >> prefix;
         
         if (prefix == 'S') {
-            int fromNeuron, toNeuron;
+            int fromNeuron;
+            int toNeuron;
             double weight;
             
             if (iss >> fromNeuron >> toNeuron >> weight) {
@@ -293,8 +287,8 @@ bool ANNImporter::parseConnections(std::ifstream& file, Network& network) {
                     // Create input synapse for the target neuron
                     Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
                     if (targetNeuron) {
-                        auto synapse = std::make_unique<Synapse>(weight, nullptr, targetNeuron, false);
-                        targetNeuron->addInputSynapse(std::move(synapse));
+                        unique_ptr<Synapse> synapse(new Synapse(weight, nullptr, targetNeuron, false));
+                        targetNeuron->addInputSynapse(move(synapse));
                     }
                     continue;
                 }
@@ -330,16 +324,16 @@ bool ANNImporter::parseConnections(std::ifstream& file, Network& network) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void ANNImporter::skipWhitespaceAndComments(std::ifstream& file) {
+void ANNImporter::skipWhitespaceAndComments(ifstream& file) {
     char ch;
     while (file.get(ch)) {
-        if (std::isspace(ch)) {
+        if (isspace(ch)) {
             continue; // Skip whitespace
         }
         else if (ch == '#') {
             // Skip comment line
-            std::string line;
-            std::getline(file, line);
+            string line;
+            getline(file, line);
         }
         else {
             // Put character back
@@ -357,14 +351,14 @@ void ANNImporter::skipWhitespaceAndComments(std::ifstream& file) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string ANNImporter::readToken(std::ifstream& file) {
+string ANNImporter::readToken(ifstream& file) {
     skipWhitespaceAndComments(file);
     
-    std::string token;
+    string token;
     char ch;
     
     while (file.get(ch)) {
-        if (std::isspace(ch)) {
+        if (isspace(ch)) {
             break;
         }
         token += ch;
@@ -381,8 +375,47 @@ std::string ANNImporter::readToken(std::ifstream& file) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::unique_ptr<ActivationFunction> ANNImporter::parseActivationFunction(const std::string& functionName) {
+unique_ptr<ActivationFunction> ANNImporter::parseActivationFunction(const string& functionName) {
     return createActivationFunction(functionName);
+}
+
+//-------------------------------------------------------------
+//【函数名称】createNeuronWithActivation
+//【函数功能】根据激活函数类型创建神经元
+//【参数】bias：偏置值，activationType：激活函数类型
+//【返回值】unique_ptr<Neuron>，创建的神经元指针
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+unique_ptr<Neuron> ANNImporter::createNeuronWithActivation(double bias, int activationType) {
+    unique_ptr<Neuron> neuron(new Neuron());
+    neuron->setBias(bias);
+    
+    // Set activation function based on type
+    switch (activationType) {
+        case 0:
+            // Type 0 = Linear (no activation)
+            neuron->setActivationFunction(createActivationFunction("Linear"));
+            break;
+        case 1:
+            // Type 1 = Sigmoid
+            neuron->setActivationFunction(createActivationFunction("Sigmoid"));
+            break;
+        case 2:
+            // Type 2 = Tanh
+            neuron->setActivationFunction(createActivationFunction("Tanh"));
+            break;
+        case 3:
+            // Type 3 = ReLU
+            neuron->setActivationFunction(createActivationFunction("ReLU"));
+            break;
+        default:
+            // Default to linear for unknown types
+            neuron->setActivationFunction(createActivationFunction("Linear"));
+            break;
+    }
+    
+    return neuron;
 }
 
 //-------------------------------------------------------------

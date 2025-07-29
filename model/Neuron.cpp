@@ -5,9 +5,11 @@
 //【更改记录】
 //-------------------------------------------------------------
 
-#include "Neuron.h"
+#include "Neuron.hpp"
 #include <algorithm>
 #include <stdexcept>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【函数名称】Neuron
@@ -17,8 +19,8 @@
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Neuron::Neuron(double bias, std::unique_ptr<ActivationFunction> activationFunction)
-    : m_bias(bias), m_activationFunction(std::move(activationFunction)),
+Neuron::Neuron(double bias, unique_ptr<ActivationFunction> activationFunction)
+    : m_bias(bias), m_activationFunction(move(activationFunction)),
       m_lastOutput(0.0), m_hasComputedOutput(false) {
 }
 
@@ -40,12 +42,12 @@ Neuron::Neuron(const Neuron& other)
     
     // Deep copy input synapses
     for (const auto& synapse : other.m_inputSynapses) {
-        m_inputSynapses.push_back(std::unique_ptr<Synapse>(new Synapse(*synapse)));
+        m_inputSynapses.push_back(unique_ptr<Synapse>(new Synapse(*synapse)));
     }
     
     // Deep copy output synapses
     for (const auto& synapse : other.m_outputSynapses) {
-        m_outputSynapses.push_back(std::unique_ptr<Synapse>(new Synapse(*synapse)));
+        m_outputSynapses.push_back(unique_ptr<Synapse>(new Synapse(*synapse)));
     }
 }
 
@@ -76,12 +78,12 @@ Neuron& Neuron::operator=(const Neuron& other) {
         
         // Deep copy input synapses
         for (const auto& synapse : other.m_inputSynapses) {
-            m_inputSynapses.push_back(std::unique_ptr<Synapse>(new Synapse(*synapse)));
+            m_inputSynapses.push_back(unique_ptr<Synapse>(new Synapse(*synapse)));
         }
         
         // Deep copy output synapses
         for (const auto& synapse : other.m_outputSynapses) {
-            m_outputSynapses.push_back(std::unique_ptr<Synapse>(new Synapse(*synapse)));
+            m_outputSynapses.push_back(unique_ptr<Synapse>(new Synapse(*synapse)));
         }
     }
     return *this;
@@ -143,8 +145,8 @@ const ActivationFunction* Neuron::getActivationFunction() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Neuron::setActivationFunction(std::unique_ptr<ActivationFunction> activationFunction) {
-    m_activationFunction = std::move(activationFunction);
+void Neuron::setActivationFunction(unique_ptr<ActivationFunction> activationFunction) {
+    m_activationFunction = move(activationFunction);
     m_hasComputedOutput = false; // Invalidate cached output
 }
 
@@ -156,10 +158,10 @@ void Neuron::setActivationFunction(std::unique_ptr<ActivationFunction> activatio
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Neuron::addInputSynapse(std::unique_ptr<Synapse> synapse) {
+void Neuron::addInputSynapse(unique_ptr<Synapse> synapse) {
     if (synapse) {
         synapse->setTargetNeuron(this);
-        m_inputSynapses.push_back(std::move(synapse));
+        m_inputSynapses.push_back(move(synapse));
         m_hasComputedOutput = false; // Invalidate cached output
     }
 }
@@ -172,10 +174,10 @@ void Neuron::addInputSynapse(std::unique_ptr<Synapse> synapse) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-void Neuron::addOutputSynapse(std::unique_ptr<Synapse> synapse) {
+void Neuron::addOutputSynapse(unique_ptr<Synapse> synapse) {
     if (synapse) {
         synapse->setSourceNeuron(this);
-        m_outputSynapses.push_back(std::move(synapse));
+        m_outputSynapses.push_back(move(synapse));
     }
 }
 
@@ -276,14 +278,14 @@ bool Neuron::removeOutputSynapse(int index) {
 //-------------------------------------------------------------
 bool Neuron::connectTo(Neuron& targetNeuron, double weight) {
     // Create output synapse for this neuron
-    auto outputSynapse = std::unique_ptr<Synapse>(new Synapse(1.0, this, &targetNeuron, true)); // Axon with weight 1
+    auto outputSynapse = unique_ptr<Synapse>(new Synapse(1.0, this, &targetNeuron, true)); // Axon with weight 1
     
     // Create input synapse for target neuron
-    auto inputSynapse = std::unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, false)); // Dendrite with specified weight
+    auto inputSynapse = unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, false)); // Dendrite with specified weight
     
     // Add synapses
-    addOutputSynapse(std::move(outputSynapse));
-    targetNeuron.addInputSynapse(std::move(inputSynapse));
+    addOutputSynapse(move(outputSynapse));
+    targetNeuron.addInputSynapse(move(inputSynapse));
     
     return true;
 }
@@ -296,9 +298,9 @@ bool Neuron::connectTo(Neuron& targetNeuron, double weight) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-double Neuron::computeOutput(const std::vector<double>& inputs) {
+double Neuron::computeOutput(const vector<double>& inputs) {
     if (inputs.size() != m_inputSynapses.size()) {
-        throw std::runtime_error("Input size mismatch with number of input synapses");
+        throw runtime_error("Input size mismatch with number of input synapses");
     }
     
     // Sum function: bias + sum of weighted inputs

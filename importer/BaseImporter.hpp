@@ -1,16 +1,18 @@
 //-------------------------------------------------------------
-//【文件名】BaseImporter.h
+//【文件名】BaseImporter.hpp
 //【功能模块和目的】神经网络模型导入基类声明
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 
-#ifndef BASE_IMPORTER_H
-#define BASE_IMPORTER_H
+#ifndef BaseImporter_hpp
+#define BaseImporter_hpp
 
-#include "../model/Network.h"
+#include "../model/Network.hpp"
 #include <memory>
 #include <string>
+
+using namespace std;
 
 //-------------------------------------------------------------
 //【类名】BaseImporter
@@ -21,6 +23,36 @@
 //-------------------------------------------------------------
 class BaseImporter {
 public:
+    //-------------------------------------------------------------
+    //【函数名称】BaseImporter
+    //【函数功能】默认构造函数
+    //【参数】无
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseImporter() = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】BaseImporter（拷贝构造）
+    //【函数功能】拷贝构造函数
+    //【参数】other：被拷贝的导入器
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseImporter(const BaseImporter& other) = default;
+    
+    //-------------------------------------------------------------
+    //【函数名称】operator=
+    //【函数功能】赋值运算符重载
+    //【参数】other：赋值来源导入器
+    //【返回值】BaseImporter&，自身引用
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    BaseImporter& operator=(const BaseImporter& other) = default;
+    
     //-------------------------------------------------------------
     //【函数名称】~BaseImporter
     //【函数功能】虚析构函数
@@ -35,58 +67,58 @@ public:
     //【函数名称】importNetwork
     //【函数功能】从文件导入神经网络
     //【参数】
-    //  - const std::string& filename：要导入的文件路径
+    //  - const string& filename：要导入的文件路径
     //【返回值】
-    //  - std::unique_ptr<Network>：导入的网络的唯一指针，导入失败时为nullptr
+    //  - unique_ptr<Network>：导入的网络的唯一指针，导入失败时为nullptr
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual std::unique_ptr<Network> importNetwork(const std::string& filename) = 0;
+    virtual unique_ptr<Network> importNetwork(const string& filename) = 0;
     
     //-------------------------------------------------------------
     //【函数名称】getSupportedExtensions
     //【函数功能】获取支持的文件扩展名
     //【返回值】
-    //  - std::string：支持的文件扩展名字符串（例如：".ann"）
+    //  - string：支持的文件扩展名字符串（例如：".ann"）
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual std::string getSupportedExtensions() const = 0;
+    virtual string getSupportedExtensions() const = 0;
     
     //-------------------------------------------------------------
     //【函数名称】getImporterName
     //【函数功能】获取导入器名称/描述
     //【返回值】
-    //  - std::string：描述导入器的字符串
+    //  - string：描述导入器的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual std::string getImporterName() const = 0;
+    virtual string getImporterName() const = 0;
     
     //-------------------------------------------------------------
     //【函数名称】isFormatSupported
     //【函数功能】检查文件格式是否受支持
     //【参数】
-    //  - const std::string& filename：要检查的文件路径
+    //  - const string& filename：要检查的文件路径
     //【返回值】
     //  - bool：格式是否受支持
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    virtual bool isFormatSupported(const std::string& filename) const;
+    virtual bool isFormatSupported(const string& filename) const;
 
 protected:
     //-------------------------------------------------------------
     //【函数名称】getFileExtension
     //【函数功能】从文件名中提取文件扩展名
     //【参数】
-    //  - const std::string& filename：文件路径
+    //  - const string& filename：文件路径
     //【返回值】
-    //  - std::string：小写的文件扩展名
+    //  - string：小写的文件扩展名
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getFileExtension(const std::string& filename) const;
+    string getFileExtension(const string& filename) const;
     
     //-------------------------------------------------------------
     //【函数名称】validateImportedNetwork
@@ -101,4 +133,4 @@ protected:
     bool validateImportedNetwork(const Network* network) const;
 };
 
-#endif // BASE_IMPORTER_H
+#endif // BaseImporter_hpp
