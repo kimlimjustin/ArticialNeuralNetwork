@@ -1,0 +1,51 @@
+# complex.ANN
+G ComplexNetwork
+# 9 neurons, 3 per layer
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+N 0.0 0
+
+# Layer 0: Neuron 0 to 2
+L 0 2
+# Layer 1: Neuron 3 to 5
+L 3 5
+# Layer 2: Neuron 6 to 8
+L 6 8
+
+# Input dendrites
+S -1 0 1.0
+S -1 1 1.0
+S -1 2 1.0
+
+# Output axons
+S 6 -1 1.0
+S 7 -1 1.0
+S 8 -1 1.0
+
+# Input to hidden layer
+S 0 3 0.5
+S 0 4 -0.3
+S 0 5 0.8
+S 1 3 -0.7
+S 1 4 0.2
+S 1 5 0.1
+S 2 3 0.4
+S 2 4 0.9
+S 2 5 -0.2
+
+# Hidden to output layer
+S 3 6 0.6
+S 3 7 0.1
+S 3 8 -0.5
+S 4 6 -0.4
+S 4 7 0.7
+S 4 8 0.3
+S 5 6 0.2
+S 5 7 -0.8
+S 5 8 0.9
