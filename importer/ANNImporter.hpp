@@ -9,7 +9,7 @@
 #define AnnImporter_hpp
 
 #include "BaseImporter.hpp"
-#include "../model/ActivationFunction.hpp"
+#include "../model/activation_functions/ActivationFunction.hpp"
 #include <fstream>
 #include <vector>
 

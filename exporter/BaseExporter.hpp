@@ -8,7 +8,7 @@
 #ifndef BaseExporter_hpp
 #define BaseExporter_hpp
 
-#include "../model/Network.hpp"
+#include "../model/neural_components/Network.hpp"
 #include <string>
 
 using namespace std;

@@ -9,7 +9,7 @@
 #define Neuron_hpp
 
 #include "Synapse.hpp"
-#include "ActivationFunction.hpp"
+#include "../activation_functions/ActivationFunction.hpp"
 #include <vector>
 #include <memory>
 

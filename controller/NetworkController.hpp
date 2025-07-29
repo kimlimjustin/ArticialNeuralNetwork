@@ -8,7 +8,7 @@
 #ifndef NetworkController_hpp
 #define NetworkController_hpp
 
-#include "../model/Network.hpp"
+#include "../model/neural_components/Network.hpp"
 #include <memory>
 #include <string>
 #include <vector>

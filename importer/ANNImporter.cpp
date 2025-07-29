@@ -6,7 +6,7 @@
 //-------------------------------------------------------------
 
 #include "ANNImporter.hpp"
-#include "../model/ActivationFunction.hpp"
+#include "../model/activation_functions/ActivationFunction.hpp"
 #include "../utils/FileUtils.hpp"
 #include <sstream>
 #include <stdexcept>

@@ -9,7 +9,7 @@
 #define AnnExporter_hpp
 
 #include "BaseExporter.hpp"
-#include "../model/ActivationFunction.hpp"
+#include "../model/activation_functions/ActivationFunction.hpp"
 #include <fstream>
 
 using namespace std;
