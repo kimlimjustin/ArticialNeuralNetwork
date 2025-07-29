@@ -11,21 +11,23 @@
 #include <algorithm>
 #include <cctype>
 
+using namespace std;
+
 //-------------------------------------------------------------
 //【函数名称】getFileExtension
 //【函数功能】获取文件扩展名（小写，带点）
 //【参数】filename：文件路径或名称
-//【返回值】std::string，扩展名
+//【返回值】string，扩展名
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::getFileExtension(const std::string& filename) {
+string FileUtils::getFileExtension(const string& filename) {
     size_t dotPos = filename.find_last_of('.');
-    if (dotPos == std::string::npos) {
+    if (dotPos == string::npos) {
         return "";
     }
     
-    std::string extension = filename.substr(dotPos);
+    string extension = filename.substr(dotPos);
     return toLowerCase(extension);
 }
 
@@ -33,18 +35,18 @@ std::string FileUtils::getFileExtension(const std::string& filename) {
 //【函数名称】getFilenameWithoutExtension
 //【函数功能】获取去除扩展名的文件名
 //【参数】filepath：完整文件路径
-//【返回值】std::string，去除扩展名后的文件名
+//【返回值】string，去除扩展名后的文件名
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::getFilenameWithoutExtension(const std::string& filepath) {
+string FileUtils::getFilenameWithoutExtension(const string& filepath) {
     // Extract filename from path
     size_t lastSlash = filepath.find_last_of("/\\");
-    std::string filename = (lastSlash == std::string::npos) ? filepath : filepath.substr(lastSlash + 1);
+    string filename = (lastSlash == string::npos) ? filepath : filepath.substr(lastSlash + 1);
     
     // Remove extension
     size_t dotPos = filename.find_last_of('.');
-    if (dotPos == std::string::npos) {
+    if (dotPos == string::npos) {
         return filename;
     }
     
@@ -55,13 +57,13 @@ std::string FileUtils::getFilenameWithoutExtension(const std::string& filepath) 
 //【函数名称】getDirectoryPath
 //【函数功能】获取文件所在目录路径
 //【参数】filepath：完整文件路径
-//【返回值】std::string，目录路径
+//【返回值】string，目录路径
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::getDirectoryPath(const std::string& filepath) {
+string FileUtils::getDirectoryPath(const string& filepath) {
     size_t lastSlash = filepath.find_last_of("/\\");
-    if (lastSlash == std::string::npos) {
+    if (lastSlash == string::npos) {
         return "."; // Current directory
     }
     
@@ -76,8 +78,8 @@ std::string FileUtils::getDirectoryPath(const std::string& filepath) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool FileUtils::fileExists(const std::string& filename) {
-    std::ifstream file(filename);
+bool FileUtils::fileExists(const string& filename) {
+    ifstream file(filename);
     return file.good();
 }
 
@@ -89,7 +91,7 @@ bool FileUtils::fileExists(const std::string& filename) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool FileUtils::isDirectory(const std::string& path) {
+bool FileUtils::isDirectory(const string& path) {
     // Basic check - in a full implementation, would use system calls
     // For now, assume paths ending with / or \ are directories
     if (path.empty()) {
@@ -108,8 +110,8 @@ bool FileUtils::isDirectory(const std::string& path) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-long FileUtils::getFileSize(const std::string& filename) {
-    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+long FileUtils::getFileSize(const string& filename) {
+    ifstream file(filename, ios::binary | ios::ate);
     if (!file.is_open()) {
         return -1;
     }
@@ -121,17 +123,17 @@ long FileUtils::getFileSize(const std::string& filename) {
 //【函数名称】readFileToString
 //【函数功能】将文件内容读取为字符串
 //【参数】filename：文件路径或名称
-//【返回值】std::string，文件内容
+//【返回值】string，文件内容
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::readFileToString(const std::string& filename) {
-    std::ifstream file(filename);
+string FileUtils::readFileToString(const string& filename) {
+    ifstream file(filename);
     if (!file.is_open()) {
         return "";
     }
     
-    std::ostringstream oss;
+    ostringstream oss;
     oss << file.rdbuf();
     return oss.str();
 }
@@ -145,8 +147,8 @@ std::string FileUtils::readFileToString(const std::string& filename) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool FileUtils::writeStringToFile(const std::string& filename, const std::string& content) {
-    std::ofstream file(filename);
+bool FileUtils::writeStringToFile(const string& filename, const string& content) {
+    ofstream file(filename);
     if (!file.is_open()) {
         return false;
     }
@@ -159,13 +161,13 @@ bool FileUtils::writeStringToFile(const std::string& filename, const std::string
 //【函数名称】normalizePath
 //【函数功能】规范化路径字符串
 //【参数】path：原始路径
-//【返回值】std::string，规范化后的路径
+//【返回值】string，规范化后的路径
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::normalizePath(const std::string& path) {
-    std::string normalized = path;
-    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+string FileUtils::normalizePath(const string& path) {
+    string normalized = path;
+    replace(normalized.begin(), normalized.end(), '\\', '/');
     return normalized;
 }
 
@@ -178,9 +180,9 @@ std::string FileUtils::normalizePath(const std::string& path) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool FileUtils::hasExtension(const std::string& filename, const std::string& extension) {
-    std::string fileExt = getFileExtension(filename);
-    std::string checkExt = extension;
+bool FileUtils::hasExtension(const string& filename, const string& extension) {
+    string fileExt = getFileExtension(filename);
+    string checkExt = extension;
     
     // Add dot if not present
     if (!checkExt.empty() && checkExt[0] != '.') {
@@ -194,14 +196,14 @@ bool FileUtils::hasExtension(const std::string& filename, const std::string& ext
 //【函数名称】toLowerCase
 //【函数功能】将字符串转换为小写
 //【参数】str：原始字符串
-//【返回值】std::string，小写字符串
+//【返回值】string，小写字符串
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::toLowerCase(const std::string& str) {
-    std::string result = str;
-    std::transform(result.begin(), result.end(), result.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+string FileUtils::toLowerCase(const string& str) {
+    string result = str;
+    transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return tolower(c); });
     return result;
 }
 
@@ -209,13 +211,13 @@ std::string FileUtils::toLowerCase(const std::string& str) {
 //【函数名称】trim
 //【函数功能】去除字符串首尾的空白字符
 //【参数】str：原始字符串
-//【返回值】std::string，去除首尾空白后的字符串
+//【返回值】string，去除首尾空白后的字符串
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string FileUtils::trim(const std::string& str) {
+string FileUtils::trim(const string& str) {
     size_t first = str.find_first_not_of(" \t\n\r");
-    if (first == std::string::npos) {
+    if (first == string::npos) {
         return "";
     }
     
@@ -228,16 +230,16 @@ std::string FileUtils::trim(const std::string& str) {
 //【函数功能】按分隔符拆分字符串
 //【参数】str：原始字符串
 //         delimiter：分隔符字符
-//【返回值】std::vector<std::string>，拆分后的字符串向量
+//【返回值】vector<string>，拆分后的字符串向量
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<std::string> FileUtils::split(const std::string& str, char delimiter) {
-    std::vector<std::string> tokens;
-    std::istringstream iss(str);
-    std::string token;
+vector<string> FileUtils::split(const string& str, char delimiter) {
+    vector<string> tokens;
+    istringstream iss(str);
+    string token;
     
-    while (std::getline(iss, token, delimiter)) {
+    while (getline(iss, token, delimiter)) {
         tokens.push_back(token);
     }
     

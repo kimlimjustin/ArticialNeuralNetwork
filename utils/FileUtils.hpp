@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 //-------------------------------------------------------------
 //【类名】FileUtils
 //【功能】文件操作工具类，提供路径、扩展名、文件校验等静态方法
@@ -24,31 +26,31 @@ public:
     //【函数名称】getFileExtension
     //【函数功能】获取文件扩展名（小写，带点）
     //【参数】filename：文件路径或名称
-    //【返回值】std::string，扩展名
+    //【返回值】string，扩展名
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string getFileExtension(const std::string& filename);
+    static string getFileExtension(const string& filename);
     
     //-------------------------------------------------------------
     //【函数名称】getFilenameWithoutExtension
     //【函数功能】获取去除扩展名的文件名
     //【参数】filepath：完整文件路径
-    //【返回值】std::string，去除扩展名后的文件名
+    //【返回值】string，去除扩展名后的文件名
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string getFilenameWithoutExtension(const std::string& filepath);
+    static string getFilenameWithoutExtension(const string& filepath);
     
     //-------------------------------------------------------------
     //【函数名称】getDirectoryPath
     //【函数功能】从完整文件路径中提取目录路径
     //【参数】filepath：完整文件路径
-    //【返回值】std::string，目录路径
+    //【返回值】string，目录路径
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string getDirectoryPath(const std::string& filepath);
+    static string getDirectoryPath(const string& filepath);
     
     //-------------------------------------------------------------
     //【函数名称】fileExists
@@ -58,7 +60,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static bool fileExists(const std::string& filename);
+    static bool fileExists(const string& filename);
     
     //-------------------------------------------------------------
     //【函数名称】isDirectory
@@ -68,7 +70,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static bool isDirectory(const std::string& path);
+    static bool isDirectory(const string& path);
     
     //-------------------------------------------------------------
     //【函数名称】getFileSize
@@ -78,17 +80,17 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static long getFileSize(const std::string& filename);
+    static long getFileSize(const string& filename);
     
     //-------------------------------------------------------------
     //【函数名称】readFileToString
     //【函数功能】读取文件全部内容为字符串
     //【参数】filename：文件路径
-    //【返回值】std::string，文件内容字符串，读取失败返回空字符串
+    //【返回值】string，文件内容字符串，读取失败返回空字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string readFileToString(const std::string& filename);
+    static string readFileToString(const string& filename);
     
     //-------------------------------------------------------------
     //【函数名称】writeStringToFile
@@ -99,17 +101,17 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static bool writeStringToFile(const std::string& filename, const std::string& content);
+    static bool writeStringToFile(const string& filename, const string& content);
     
     //-------------------------------------------------------------
     //【函数名称】normalizePath
     //【函数功能】规范化文件路径（将反斜杠转换为斜杠）
     //【参数】path：待规范化的文件路径
-    //【返回值】std::string，规范化后的文件路径
+    //【返回值】string，规范化后的文件路径
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string normalizePath(const std::string& path);
+    static string normalizePath(const string& path);
     
     //-------------------------------------------------------------
     //【函数名称】hasExtension
@@ -120,38 +122,38 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static bool hasExtension(const std::string& filename, const std::string& extension);
+    static bool hasExtension(const string& filename, const string& extension);
     
     //-------------------------------------------------------------
     //【函数名称】toLowerCase
     //【函数功能】将字符串转换为小写
     //【参数】str：待转换字符串
-    //【返回值】std::string，小写转换后的字符串
+    //【返回值】string，小写转换后的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string toLowerCase(const std::string& str);
+    static string toLowerCase(const string& str);
     
     //-------------------------------------------------------------
     //【函数名称】trim
     //【函数功能】去除字符串首尾空白
     //【参数】str：待处理字符串
-    //【返回值】std::string，去除首尾空白后的字符串
+    //【返回值】string，去除首尾空白后的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::string trim(const std::string& str);
+    static string trim(const string& str);
     
     //-------------------------------------------------------------
     //【函数名称】split
     //【函数功能】按分隔符拆分字符串
     //【参数】str：待拆分字符串
     //【参数】delimiter：分隔符字符
-    //【返回值】std::vector<std::string>，拆分后的字符串向量
+    //【返回值】vector<string>，拆分后的字符串向量
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    static std::vector<std::string> split(const std::string& str, char delimiter);
+    static vector<string> split(const string& str, char delimiter);
 
 private:
     //-------------------------------------------------------------

@@ -11,7 +11,9 @@
 #include <stdexcept>
 #include <sstream>
 
-std::unique_ptr<NetworkController> NetworkController::m_instance = nullptr;
+using namespace std;
+
+unique_ptr<NetworkController> NetworkController::m_instance = nullptr;
 
 //-------------------------------------------------------------
 //【函数名称】NetworkController
@@ -45,7 +47,7 @@ NetworkController::~NetworkController() {
 //-------------------------------------------------------------
 NetworkController& NetworkController::getInstance() {
     if (m_instance == nullptr) {
-        m_instance = std::unique_ptr<NetworkController>(new NetworkController());
+        m_instance = unique_ptr<NetworkController>(new NetworkController());
     }
     return *m_instance;
 }
@@ -71,13 +73,13 @@ void NetworkController::cleanup() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool NetworkController::importNetwork(const std::string& filename) {
+bool NetworkController::importNetwork(const string& filename) {
     try {
         ANNImporter importer;
         m_network = importer.importNetwork(filename);
         return m_network != nullptr;
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         m_network = nullptr;
         return false;
     }
@@ -91,7 +93,7 @@ bool NetworkController::importNetwork(const std::string& filename) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-bool NetworkController::exportNetwork(const std::string& filename) const {
+bool NetworkController::exportNetwork(const string& filename) const {
     if (!hasNetwork()) {
         return false;
     }
@@ -100,7 +102,7 @@ bool NetworkController::exportNetwork(const std::string& filename) const {
         ANNExporter exporter;
         return exporter.exportNetwork(*m_network, filename);
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -140,12 +142,12 @@ bool NetworkController::validateNetwork() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string NetworkController::getNetworkStatistics() const {
+string NetworkController::getNetworkStatistics() const {
     if (!hasNetwork()) {
         return "No network loaded.";
     }
     
-    std::ostringstream oss;
+    ostringstream oss;
     oss << "Network Statistics:\n";
     oss << "  Total Layers: " << m_network->getLayerCount() << "\n";
     oss << "  Total Neurons: " << m_network->getNeuronCount() << "\n";
@@ -163,12 +165,12 @@ std::string NetworkController::getNetworkStatistics() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string NetworkController::getLayerInformation() const {
+string NetworkController::getLayerInformation() const {
     if (!hasNetwork()) {
         return "No network loaded.";
     }
     
-    std::ostringstream oss;
+    ostringstream oss;
     oss << "Layer Information:\n";
     
     for (int i = 0; i < m_network->getLayerCount(); ++i) {
@@ -189,7 +191,7 @@ std::string NetworkController::getLayerInformation() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string NetworkController::getNeuronInformation(int layerIndex) const {
+string NetworkController::getNeuronInformation(int layerIndex) const {
     if (!hasNetwork()) {
         return "No network loaded.";
     }
@@ -199,7 +201,7 @@ std::string NetworkController::getNeuronInformation(int layerIndex) const {
         return "Invalid layer index.";
     }
     
-    std::ostringstream oss;
+    ostringstream oss;
     oss << "Neurons in Layer " << layerIndex << ":\n";
     
     for (int i = 0; i < layer->getNeuronCount(); ++i) {
@@ -220,7 +222,7 @@ std::string NetworkController::getNeuronInformation(int layerIndex) const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::string NetworkController::getNeuronConnections(int layerIndex, int neuronIndex) const {
+string NetworkController::getNeuronConnections(int layerIndex, int neuronIndex) const {
     if (!hasNetwork()) {
         return "No network loaded.";
     }
@@ -235,7 +237,7 @@ std::string NetworkController::getNeuronConnections(int layerIndex, int neuronIn
         return "Invalid neuron index.";
     }
     
-    std::ostringstream oss;
+    ostringstream oss;
     oss << "Connections for Neuron " << neuronIndex << " in Layer " << layerIndex << ":\n";
     oss << "  Input connections (dendrites): " << neuron->getInputSynapseCount() << "\n";
     oss << "  Output connections (axon): " << neuron->getOutputSynapseCount() << "\n";
@@ -255,14 +257,14 @@ std::string NetworkController::getNeuronConnections(int layerIndex, int neuronIn
 //-------------------------------------------------------------
 bool NetworkController::addLayer() {
     if (!hasNetwork()) {
-        m_network = std::unique_ptr<Network>(new Network());
+        m_network = unique_ptr<Network>(new Network());
     }
     
     try {
-        m_network->addLayer(std::unique_ptr<Layer>(new Layer()));
+        m_network->addLayer(unique_ptr<Layer>(new Layer()));
         return true;
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -283,7 +285,7 @@ bool NetworkController::deleteLayer(int layerIndex) {
     try {
         return m_network->removeLayer(layerIndex);
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -315,7 +317,7 @@ bool NetworkController::modifyNeuronBias(int layerIndex, int neuronIndex, double
         neuron->setBias(bias);
         return true;
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -341,7 +343,7 @@ bool NetworkController::deleteNeuron(int layerIndex, int neuronIndex) {
     try {
         return layer->removeNeuron(neuronIndex);
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -381,7 +383,7 @@ bool NetworkController::connectNeurons(int fromLayer, int fromNeuron, int toLaye
     try {
         return sourceNeuron->connectTo(*targetNeuron, weight);
     }
-    catch (const std::exception&) {
+    catch (const exception&) {
         return false;
     }
 }
@@ -415,13 +417,13 @@ int NetworkController::getInputSize() const {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-std::vector<double> NetworkController::runInference(const std::vector<double>& inputs) const {
+vector<double> NetworkController::runInference(const vector<double>& inputs) const {
     if (!hasNetwork()) {
-        throw std::runtime_error("No network loaded");
+        throw runtime_error("No network loaded");
     }
     
     if (!m_network->isValid()) {
-        throw std::runtime_error("Network is not valid");
+        throw runtime_error("Network is not valid");
     }
     
     return m_network->predict(inputs);

@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 //-------------------------------------------------------------
 //【类名】NetworkController
 //【功能】神经网络业务逻辑控制器，单例模式
@@ -22,8 +24,8 @@
 //-------------------------------------------------------------
 class NetworkController {
 private:
-    static std::unique_ptr<NetworkController> m_instance;  // 单例实例
-    std::unique_ptr<Network> m_network;    // 当前神经网络模型
+    static unique_ptr<NetworkController> m_instance;  // 单例实例
+    unique_ptr<Network> m_network;    // 当前神经网络模型
     
     //-------------------------------------------------------------
     //【函数名称】NetworkController
@@ -94,7 +96,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool importNetwork(const std::string& filename);
+    bool importNetwork(const string& filename);
     
     //-------------------------------------------------------------
     //【函数名称】exportNetwork
@@ -104,7 +106,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    bool exportNetwork(const std::string& filename) const;
+    bool exportNetwork(const string& filename) const;
     
     //-------------------------------------------------------------
     //【函数名称】hasNetwork
@@ -130,41 +132,41 @@ public:
     //【函数名称】getNetworkStatistics
     //【函数功能】获取网络统计信息的格式化字符串
     //【参数】无
-    //【返回值】std::string，包含网络统计信息的字符串
+    //【返回值】string，包含网络统计信息的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getNetworkStatistics() const;
+    string getNetworkStatistics() const;
     
     //-------------------------------------------------------------
     //【函数名称】getLayerInformation
     //【函数功能】获取所有层的信息
     //【参数】无
-    //【返回值】std::string，包含层信息的字符串
+    //【返回值】string，包含层信息的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getLayerInformation() const;
+    string getLayerInformation() const;
     
     //-------------------------------------------------------------
     //【函数名称】getNeuronInformation
     //【函数功能】获取指定层中神经元的信息
     //【参数】layerIndex：层索引
-    //【返回值】std::string，包含神经元信息的字符串
+    //【返回值】string，包含神经元信息的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getNeuronInformation(int layerIndex) const;
+    string getNeuronInformation(int layerIndex) const;
     
     //-------------------------------------------------------------
     //【函数名称】getNeuronConnections
     //【函数功能】获取指定神经元的连接信息
     //【参数】layerIndex：层索引，neuronIndex：神经元索引
-    //【返回值】std::string，包含连接信息的字符串
+    //【返回值】string，包含连接信息的字符串
     //【开发者及日期】林钲凯 2025-07-27
     //【更改记录】
     //-------------------------------------------------------------
-    std::string getNeuronConnections(int layerIndex, int neuronIndex) const;
+    string getNeuronConnections(int layerIndex, int neuronIndex) const;
     
     //-------------------------------------------------------------
     //【函数名称】addLayer
@@ -230,11 +232,11 @@ public:
     //【函数名称】runInference
     //【函数功能】使用给定输入在网络上运行推理
     //【参数】inputs：网络的输入值向量
-    //【返回值】std::vector<double>，网络的输出值向量
+    //【返回值】vector<double>，网络的输出值向量
     //【开发者及日期】林钲凯 2025-07-27
-    //【更改记录】推理失败时抛出std::runtime_error异常
+    //【更改记录】推理失败时抛出runtime_error异常
     //-------------------------------------------------------------
-    std::vector<double> runInference(const std::vector<double>& inputs) const;
+    vector<double> runInference(const vector<double>& inputs) const;
 };
 
 #endif // NetworkController_hpp
