@@ -349,13 +349,12 @@ bool NetworkController::deleteNeuron(int layerIndex, int neuronIndex) {
         return false;
     }
     
-    Layer* layer = m_network->getLayer(layerIndex);
-    if (!layer) {
-        return false;
-    }
-    
     try {
-        return layer->removeNeuron(neuronIndex);
+        bool success = m_network->removeNeuron(layerIndex, neuronIndex);
+        if (success) {
+            m_network->clearImportErrors();
+        }
+        return success;
     }
     catch (const exception&) {
         return false;

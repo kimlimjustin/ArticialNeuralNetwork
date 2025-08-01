@@ -624,3 +624,53 @@ bool Network::allNeuronsParticipate() const {
     
     return true;
 }
+
+//-------------------------------------------------------------
+//【函数名称】removeNeuron
+//【函数功能】安全移除指定层中的神经元（清理所有相关连接）
+//【参数】layerIndex：层索引，neuronIndex：神经元索引
+//【返回值】bool，是否移除成功
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool Network::removeNeuron(int layerIndex, int neuronIndex) {
+    if (layerIndex < 0 || layerIndex >= static_cast<int>(m_layers.size())) {
+        return false;
+    }
+    
+    Layer* targetLayer = m_layers[layerIndex].get();
+    if (!targetLayer || neuronIndex < 0 || neuronIndex >= targetLayer->getNeuronCount()) {
+        return false;
+    }
+    
+    Neuron* neuronToDelete = targetLayer->getNeuron(neuronIndex);
+    if (!neuronToDelete) {
+        return false;
+    }
+    
+    // Remove all synapses that reference the neuron to be deleted
+    for (auto& layer : m_layers) {
+        for (int i = 0; i < layer->getNeuronCount(); ++i) {
+            Neuron* neuron = layer->getNeuron(i);
+            if (neuron && neuron != neuronToDelete) {
+                // Remove synapses targeting the deleted neuron
+                for (int j = neuron->getOutputSynapseCount() - 1; j >= 0; --j) {
+                    const Synapse* synapse = neuron->getOutputSynapse(j);
+                    if (synapse && synapse->getTargetNeuron() == neuronToDelete) {
+                        neuron->removeOutputSynapse(j);
+                    }
+                }
+                // Remove synapses from the deleted neuron
+                for (int j = neuron->getInputSynapseCount() - 1; j >= 0; --j) {
+                    const Synapse* synapse = neuron->getInputSynapse(j);
+                    if (synapse && synapse->getSourceNeuron() == neuronToDelete) {
+                        neuron->removeInputSynapse(j);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Remove the neuron from its layer
+    return targetLayer->removeNeuron(neuronIndex);
+}
