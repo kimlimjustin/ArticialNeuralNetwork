@@ -20,9 +20,9 @@ using namespace std;
 //-------------------------------------------------------------
 double TanhFunction::activate(double x) const {
     // f(x) = (e^x - e^(-x)) / (e^x + e^(-x)) as per specification
-    double ex = exp(x);
-    double e_neg_x = exp(-x);
-    return (ex - e_neg_x) / (ex + e_neg_x);
+    double rEx = exp(x);
+    double rE_neg_x = exp(-x);
+    return (rEx - rE_neg_x) / (rEx + rE_neg_x);
 }
 
 //-------------------------------------------------------------

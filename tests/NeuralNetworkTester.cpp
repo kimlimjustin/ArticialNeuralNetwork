@@ -29,7 +29,7 @@ using namespace std;
 //【更改记录】
 //-------------------------------------------------------------
 NeuralNetworkTester::NeuralNetworkTester(NetworkController& ctrl) 
-    : controller(ctrl), passedTests(0), totalTests(0) {
+    : controller(ctrl), iPassedTests(0), iTotalTests(0) {
 }
 
 //-------------------------------------------------------------
@@ -54,9 +54,9 @@ void NeuralNetworkTester::printTestHeader(const string& testName) {
 //【更改记录】
 //-------------------------------------------------------------
 void NeuralNetworkTester::recordTestResult(const string& /*testName*/, bool passed) {
-    totalTests++;
+    iTotalTests++;
     if (passed) {
-        passedTests++;
+        iPassedTests++;
         cout << "PASSED" << endl;
     } else {
         cout << "FAILED" << endl;
@@ -74,9 +74,9 @@ void NeuralNetworkTester::recordTestResult(const string& /*testName*/, bool pass
 bool NeuralNetworkTester::testNetworkImport() {
     printTestHeader("network import from ANN file");
     
-    bool result = controller.importNetwork("complex.ANN");
-    recordTestResult("Network Import", result);
-    return result;
+    bool bResult = controller.importNetwork("complex.ANN");
+    recordTestResult("Network Import", bResult);
+    return bResult;
 }
 
 //-------------------------------------------------------------
@@ -90,9 +90,9 @@ bool NeuralNetworkTester::testNetworkImport() {
 bool NeuralNetworkTester::testNetworkValidation() {
     printTestHeader("network structure validation");
     
-    bool result = controller.validateNetwork();
-    recordTestResult("Network Validation", result);
-    return result;
+    bool bResult = controller.validateNetwork();
+    recordTestResult("Network Validation", bResult);
+    return bResult;
 }
 
 //-------------------------------------------------------------
@@ -108,12 +108,12 @@ bool NeuralNetworkTester::testNetworkStructure() {
     
     try {
         string stats = controller.getNetworkStatistics();
-        bool result = !stats.empty() && stats.find("Layers") != string::npos;
-        recordTestResult("Network Structure", result);
-        if (result) {
+        bool bResult = !stats.empty() && stats.find("Layers") != string::npos;
+        recordTestResult("Network Structure", bResult);
+        if (bResult) {
             cout << "  " << stats << endl;
         }
-        return result;
+        return bResult;
     } catch (const exception& e) {
         recordTestResult("Network Structure", false);
         cout << "  Error: " << e.what() << endl;
@@ -141,9 +141,9 @@ bool NeuralNetworkTester::testInference() {
         
         if (result) {
             cout << "  Input: [1.0, 0.0, 0.0] -> Output: [" << fixed << setprecision(3);
-            for (size_t i = 0; i < output.size(); ++i) {
-                cout << output[i];
-                if (i < output.size() - 1) cout << ", ";
+            for (size_t uIdx = 0; uIdx < output.size(); ++uIdx) {
+                cout << output[uIdx];
+                if (uIdx < output.size() - 1) cout << ", ";
             }
             cout << "]" << endl;
         }
@@ -208,18 +208,18 @@ bool NeuralNetworkTester::testSaveLoad() {
         // 测试一致性
         vector<double> reloadedOutput = controller.runInference(testInput);
         
-        double maxDiff = 0.0;
-        for (size_t i = 0; i < originalOutput.size(); ++i) {
-            double diff = abs(originalOutput[i] - reloadedOutput[i]);
-            if (diff > maxDiff) maxDiff = diff;
+        double rMaxDiff = 0.0;
+        for (size_t uIdx = 0; uIdx < originalOutput.size(); ++uIdx) {
+            double rDiff = abs(originalOutput[uIdx] - reloadedOutput[uIdx]);
+            if (rDiff > rMaxDiff) rMaxDiff = rDiff;
         }
         
-        bool result = (maxDiff < 1e-6);
+        bool result = (rMaxDiff < 1e-6);
         recordTestResult("Save/Load Consistency", result);
         
         if (result) {
             cout << "  Maximum output difference: " << scientific << setprecision(2) 
-                 << maxDiff << endl;
+                 << rMaxDiff << endl;
         }
         return result;
     } catch (const exception& e) {
@@ -287,32 +287,32 @@ bool NeuralNetworkTester::testXORProblem() {
         vector<vector<double>> xorInputs = {{0,0,0}, {0,1,0}, {1,0,0}, {1,1,0}};
         vector<vector<double>> xorTargets = {{0,0,0}, {1,0,0}, {1,0,0}, {0,0,0}};
         
-        double totalError = 0.0;
-        bool allValid = true;
+        double rTotalError = 0.0;
+        bool bAllValid = true;
         
         cout << "PROCESSING" << endl;
-        for (size_t i = 0; i < xorInputs.size(); ++i) {
-            vector<double> output = controller.runInference(xorInputs[i]);
-            cout << "  XOR[" << xorInputs[i][0] << "," << xorInputs[i][1] 
+        for (size_t uInputIdx = 0; uInputIdx < xorInputs.size(); ++uInputIdx) {
+            vector<double> output = controller.runInference(xorInputs[uInputIdx]);
+            cout << "  XOR[" << xorInputs[uInputIdx][0] << "," << xorInputs[uInputIdx][1] 
                  << "] -> [" << fixed << setprecision(3);
             
-            for (size_t j = 0; j < output.size(); ++j) {
-                cout << output[j];
-                if (j < output.size() - 1) cout << ",";
+            for (size_t uOutputIdx = 0; uOutputIdx < output.size(); ++uOutputIdx) {
+                cout << output[uOutputIdx];
+                if (uOutputIdx < output.size() - 1) cout << ",";
                 
-                if (j < xorTargets[i].size()) {
-                    double error = output[j] - xorTargets[i][j];
-                    totalError += error * error;
+                if (uOutputIdx < xorTargets[uInputIdx].size()) {
+                    double rError = output[uOutputIdx] - xorTargets[uInputIdx][uOutputIdx];
+                    rTotalError += rError * rError;
                 }
             }
             cout << "]" << endl;
         }
         
-        double mse = totalError / 12.0;  // 4 samples * 3 outputs
-        cout << "  XOR MSE: " << fixed << setprecision(4) << mse << endl;
+        double rMse = rTotalError / 12.0;  // 4 samples * 3 outputs
+        cout << "  XOR MSE: " << fixed << setprecision(4) << rMse << endl;
         
-        recordTestResult("XOR Processing", allValid);
-        return allValid;
+        recordTestResult("XOR Processing", bAllValid);
+        return bAllValid;
     } catch (const exception& e) {
         recordTestResult("XOR Processing", false);
         cout << "  Error: " << e.what() << endl;
@@ -338,27 +338,27 @@ bool NeuralNetworkTester::testClassification() {
             {0.3, 0.2, 1.0}, {0.1, 0.4, 0.9}, {0.2, 0.3, 0.8}   // Class 2
         };
         
-        int correct = 0;
+        int iCorrect = 0;
         cout << "PROCESSING" << endl;
         
-        for (size_t i = 0; i < classInputs.size(); ++i) {
-            vector<double> output = controller.runInference(classInputs[i]);
+        for (size_t uInputIdx = 0; uInputIdx < classInputs.size(); ++uInputIdx) {
+            vector<double> output = controller.runInference(classInputs[uInputIdx]);
             
-            int predicted = 0;
-            for (size_t j = 1; j < output.size(); ++j) {
-                if (output[j] > output[predicted]) predicted = j;
+            int iPredicted = 0;
+            for (size_t uOutputIdx = 1; uOutputIdx < output.size(); ++uOutputIdx) {
+                if (output[uOutputIdx] > output[iPredicted]) iPredicted = uOutputIdx;
             }
             
-            int expected = i / 3;
-            if (predicted == expected) correct++;
+            int iExpected = uInputIdx / 3;
+            if (iPredicted == iExpected) iCorrect++;
             
-            cout << "  Sample " << i+1 << " -> Class " << predicted 
-                 << " (expected " << expected << ")" << endl;
+            cout << "  Sample " << uInputIdx+1 << " -> Class " << iPredicted 
+                 << " (expected " << iExpected << ")" << endl;
         }
         
-        double accuracy = 100.0 * correct / classInputs.size();
+        double rAccuracy = 100.0 * iCorrect / classInputs.size();
         cout << "  Classification accuracy: " << fixed << setprecision(1) 
-             << accuracy << "%" << endl;
+             << rAccuracy << "%" << endl;
         
         recordTestResult("Classification Processing", true);
         return true;
@@ -381,8 +381,8 @@ bool NeuralNetworkTester::testRegression() {
     printTestHeader("regression task processing");
     
     try {
-        double totalError = 0.0;
-        int sampleCount = 0;
+        double rTotalError = 0.0;
+        int iSampleCount = 0;
         
         cout << "PROCESSING" << endl;
         
@@ -393,17 +393,17 @@ bool NeuralNetworkTester::testRegression() {
                     vector<double> target = {x + y*0.1, y + z*0.2, z + x*0.1};
                     vector<double> output = controller.runInference(input);
                     
-                    for (size_t i = 0; i < output.size() && i < target.size(); ++i) {
-                        double error = output[i] - target[i];
-                        totalError += error * error;
+                    for (size_t uIdx = 0; uIdx < output.size() && uIdx < target.size(); ++uIdx) {
+                        double rError = output[uIdx] - target[uIdx];
+                        rTotalError += rError * rError;
                     }
-                    sampleCount++;
+                    iSampleCount++;
                 }
             }
         }
         
-        double mse = totalError / (sampleCount * 3);
-        cout << "  Regression MSE: " << fixed << setprecision(4) << mse << endl;
+        double rMse = rTotalError / (iSampleCount * 3);
+        cout << "  Regression MSE: " << fixed << setprecision(4) << rMse << endl;
         
         recordTestResult("Regression Processing", true);
         return true;
@@ -427,7 +427,7 @@ bool NeuralNetworkTester::testMultipleNetworks() {
     
     try {
         vector<string> networkFiles = {"complex.ANN", "test_output.ANN"};
-        bool allLoaded = true;
+        bool bAllLoaded = true;
         
         cout << "PROCESSING" << endl;
         
@@ -442,12 +442,12 @@ bool NeuralNetworkTester::testMultipleNetworks() {
                 cout << "    Inference test: " << (output.size() == 3 ? "PASS" : "FAIL") << endl;
             } else {
                 cout << "FAILED" << endl;
-                allLoaded = false;
+                bAllLoaded = false;
             }
         }
         
-        recordTestResult("Multiple Networks", allLoaded);
-        return allLoaded;
+        recordTestResult("Multiple Networks", bAllLoaded);
+        return bAllLoaded;
     } catch (const exception& e) {
         recordTestResult("Multiple Networks", false);
         cout << "  Error: " << e.what() << endl;
@@ -560,11 +560,11 @@ bool NeuralNetworkTester::runAllTests() {
     
     // 打印总结
     cout << "\n=== Test Summary ===" << endl;
-    cout << "Passed: " << passedTests << "/" << totalTests << " tests" << endl;
+    cout << "Passed: " << iPassedTests << "/" << iTotalTests << " tests" << endl;
     cout << "Success Rate: " << fixed << setprecision(1) 
-         << (100.0 * passedTests / totalTests) << "%" << endl;
+         << (100.0 * iPassedTests / iTotalTests) << "%" << endl;
     
-    return passedTests == totalTests;
+    return iPassedTests == iTotalTests;
 }
 
 //-------------------------------------------------------------

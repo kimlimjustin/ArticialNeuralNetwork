@@ -305,17 +305,17 @@ double Neuron::computeOutput(const vector<double>& inputs) {
     }
     
     // Sum function: bias + sum of weighted inputs
-    double sum = m_bias;
-    for (size_t i = 0; i < inputs.size(); ++i) {
-        sum += m_inputSynapses[i]->transmit(inputs[i]);
+    double rSum = m_bias;
+    for (size_t uInputIdx = 0; uInputIdx < inputs.size(); ++uInputIdx) {
+        rSum += m_inputSynapses[uInputIdx]->transmit(inputs[uInputIdx]);
     }
     
     // Activation function
     if (m_activationFunction) {
-        m_lastOutput = m_activationFunction->activate(sum);
+        m_lastOutput = m_activationFunction->activate(rSum);
     } else {
         // Linear activation (f(x) = x)
-        m_lastOutput = sum;
+        m_lastOutput = rSum;
     }
     
     m_hasComputedOutput = true;

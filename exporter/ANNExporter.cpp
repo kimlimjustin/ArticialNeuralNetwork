@@ -135,62 +135,62 @@ bool ANNExporter::writeLayerInformation(ofstream& file, const Network& network) 
     writeComment(file, "Six Neurons: zero bias, without activation function");
     
     // First, write all neurons
-    int neuronIndex = 0;
-    for (int i = 0; i < network.getLayerCount(); ++i) {
-        const Layer* layer = network.getLayer(i);
-        if (!layer) {
+    int iNeuronIndex = 0;
+    for (int iLayerIdx = 0; iLayerIdx < network.getLayerCount(); ++iLayerIdx) {
+        const Layer* pLayer = network.getLayer(iLayerIdx);
+        if (!pLayer) {
             return false;
         }
         
-        for (int j = 0; j < layer->getNeuronCount(); ++j) {
-            const Neuron* neuron = layer->getNeuron(j);
-            if (!neuron) {
+        for (int iNeuronIdx = 0; iNeuronIdx < pLayer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* pNeuron = pLayer->getNeuron(iNeuronIdx);
+            if (!pNeuron) {
                 return false;
             }
             
             // Write neuron: N bias activation_type
-            file << "N " << fixed << setprecision(1) << neuron->getBias() << " ";
+            file << "N " << fixed << setprecision(1) << pNeuron->getBias() << " ";
             
             // Determine activation type based on function name
-            const ActivationFunction* activationFunc = neuron->getActivationFunction();
-            int activationType = 0; // Default to linear
-            if (activationFunc) {
-                string name = activationFunc->getName();
+            const ActivationFunction* pActivationFunc = pNeuron->getActivationFunction();
+            int iActivationType = 0; // Default to linear
+            if (pActivationFunc) {
+                string name = pActivationFunc->getName();
                 if (name == "Linear") {
-                    activationType = 0;
+                    iActivationType = 0;
                 } else if (name == "Sigmoid") {
-                    activationType = 1;
+                    iActivationType = 1;
                 } else if (name == "Tanh") {
-                    activationType = 2;
+                    iActivationType = 2;
                 } else if (name == "ReLU") {
-                    activationType = 3;
+                    iActivationType = 3;
                 } else {
-                    activationType = 0; // Default to linear for unknown types
+                    iActivationType = 0; // Default to linear for unknown types
                 }
             }
-            file << activationType << endl;
+            file << iActivationType << endl;
             
-            neuronIndex++;
+            iNeuronIndex++;
         }
     }
     
     // Then, write layer definitions
-    neuronIndex = 0;
-    for (int i = 0; i < network.getLayerCount(); ++i) {
-        const Layer* layer = network.getLayer(i);
+    iNeuronIndex = 0;
+    for (int iLayerIdx = 0; iLayerIdx < network.getLayerCount(); ++iLayerIdx) {
+        const Layer* layer = network.getLayer(iLayerIdx);
         if (!layer) {
             return false;
         }
         
-        writeComment(file, "Layer " + to_string(i) + ": Neuron " + 
-                    to_string(neuronIndex) + " to " + 
-                    to_string(neuronIndex + layer->getNeuronCount() - 1));
+        writeComment(file, "Layer " + to_string(iLayerIdx) + ": Neuron " + 
+                    to_string(iNeuronIndex) + " to " + 
+                    to_string(iNeuronIndex + layer->getNeuronCount() - 1));
         
-        int startNeuron = neuronIndex;
-        int endNeuron = neuronIndex + layer->getNeuronCount() - 1;
-        file << "L " << startNeuron << " " << endNeuron << endl;
+        int iStartNeuron = iNeuronIndex;
+        int iEndNeuron = iNeuronIndex + layer->getNeuronCount() - 1;
+        file << "L " << iStartNeuron << " " << iEndNeuron << endl;
         
-        neuronIndex += layer->getNeuronCount();
+        iNeuronIndex += layer->getNeuronCount();
     }
     
     return file.good();
@@ -205,8 +205,8 @@ bool ANNExporter::writeLayerInformation(ofstream& file, const Network& network) 
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNExporter::writeNeuronInformation(ofstream& file, const Layer& layer) {
-    for (int i = 0; i < layer.getNeuronCount(); ++i) {
-        const Neuron* neuron = layer.getNeuron(i);
+    for (int iNeuronIdx = 0; iNeuronIdx < layer.getNeuronCount(); ++iNeuronIdx) {
+        const Neuron* neuron = layer.getNeuron(iNeuronIdx);
         if (!neuron) {
             return false;
         }
@@ -237,14 +237,14 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
     const Layer* firstLayer = network.getLayer(0);
     if (firstLayer) {
         writeComment(file, "Neuron 0 to " + to_string(firstLayer->getNeuronCount() - 1) + ": has one Dendrite");
-        for (int i = 0; i < firstLayer->getNeuronCount(); ++i) {
-            const Neuron* neuron = firstLayer->getNeuron(i);
+        for (int iNeuronIdx = 0; iNeuronIdx < firstLayer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* neuron = firstLayer->getNeuron(iNeuronIdx);
             if (neuron && neuron->getInputSynapseCount() > 0) {
                 // Find the input synapse with source = nullptr (external input)
-                for (int j = 0; j < neuron->getInputSynapseCount(); ++j) {
-                    const Synapse* synapse = neuron->getInputSynapse(j);
+                for (int iSynapseIdx = 0; iSynapseIdx < neuron->getInputSynapseCount(); ++iSynapseIdx) {
+                    const Synapse* synapse = neuron->getInputSynapse(iSynapseIdx);
                     if (synapse && synapse->getSourceNeuron() == nullptr) {
-                        file << "S -1 " << i << " " << fixed << setprecision(1) 
+                        file << "S -1 " << iNeuronIdx << " " << fixed << setprecision(1) 
                              << synapse->getWeight() << endl;
                         break;
                     }
@@ -256,24 +256,24 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
     // Write output connections (from last layer to external output)
     const Layer* lastLayer = network.getLayer(network.getLayerCount() - 1);
     if (lastLayer) {
-        int lastLayerStart = 0;
-        for (int i = 0; i < network.getLayerCount() - 1; ++i) {
-            const Layer* layer = network.getLayer(i);
+        int iLastLayerStart = 0;
+        for (int iLayerIdx = 0; iLayerIdx < network.getLayerCount() - 1; ++iLayerIdx) {
+            const Layer* layer = network.getLayer(iLayerIdx);
             if (layer) {
-                lastLayerStart += layer->getNeuronCount();
+                iLastLayerStart += layer->getNeuronCount();
             }
         }
         
-        writeComment(file, "Neuron " + to_string(lastLayerStart) + " to " + 
-                    to_string(lastLayerStart + lastLayer->getNeuronCount() - 1) + ": has one Axon");
-        for (int i = 0; i < lastLayer->getNeuronCount(); ++i) {
-            const Neuron* neuron = lastLayer->getNeuron(i);
+        writeComment(file, "Neuron " + to_string(iLastLayerStart) + " to " + 
+                    to_string(iLastLayerStart + lastLayer->getNeuronCount() - 1) + ": has one Axon");
+        for (int iNeuronIdx = 0; iNeuronIdx < lastLayer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* neuron = lastLayer->getNeuron(iNeuronIdx);
             if (neuron && neuron->getOutputSynapseCount() > 0) {
                 // Find the output synapse with target = nullptr (external output)
-                for (int j = 0; j < neuron->getOutputSynapseCount(); ++j) {
-                    const Synapse* synapse = neuron->getOutputSynapse(j);
+                for (int iSynapseIdx = 0; iSynapseIdx < neuron->getOutputSynapseCount(); ++iSynapseIdx) {
+                    const Synapse* synapse = neuron->getOutputSynapse(iSynapseIdx);
                     if (synapse && synapse->getTargetNeuron() == nullptr) {
-                        file << "S " << (lastLayerStart + i) << " -1 " << fixed << setprecision(1) 
+                        file << "S " << (iLastLayerStart + iNeuronIdx) << " -1 " << fixed << setprecision(1) 
                              << synapse->getWeight() << endl;
                         break;
                     }
@@ -283,62 +283,62 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
     }
     
     // Write inter-layer connections
-    int currentNeuronOffset = 0;
-    for (int layerIndex = 0; layerIndex < network.getLayerCount(); ++layerIndex) {
-        const Layer* layer = network.getLayer(layerIndex);
+    int iCurrentNeuronOffset = 0;
+    for (int iLayerIndex = 0; iLayerIndex < network.getLayerCount(); ++iLayerIndex) {
+        const Layer* layer = network.getLayer(iLayerIndex);
         if (!layer) continue;
         
-        for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
-            const Neuron* neuron = layer->getNeuron(neuronIndex);
-            if (!neuron) continue;
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* pNeuron = layer->getNeuron(iNeuronIdx);
+            if (!pNeuron) continue;
             
-            int globalNeuronIndex = currentNeuronOffset + neuronIndex;
+            int iGlobalNeuronIndex = iCurrentNeuronOffset + iNeuronIdx;
             
             // Write output connections for this neuron
-            if (neuron->getOutputSynapseCount() > 0) {
+            if (pNeuron->getOutputSynapseCount() > 0) {
                 // Find target layer neurons
-                int targetLayerStart = currentNeuronOffset + layer->getNeuronCount();
+                int iTargetLayerStart = iCurrentNeuronOffset + layer->getNeuronCount();
                 
                 // Add comment for this neuron's connections if it's not the last layer
-                if (layerIndex < network.getLayerCount() - 1) {
-                    const Layer* nextLayer = network.getLayer(layerIndex + 1);
+                if (iLayerIndex < network.getLayerCount() - 1) {
+                    const Layer* nextLayer = network.getLayer(iLayerIndex + 1);
                     if (nextLayer) {
-                        writeComment(file, "Dendrites from Neuron " + to_string(globalNeuronIndex) + 
-                                    " to Neuron " + to_string(targetLayerStart) + "~" + 
-                                    to_string(targetLayerStart + nextLayer->getNeuronCount() - 1));
+                        writeComment(file, "Dendrites from Neuron " + to_string(iGlobalNeuronIndex) + 
+                                    " to Neuron " + to_string(iTargetLayerStart) + "~" + 
+                                    to_string(iTargetLayerStart + nextLayer->getNeuronCount() - 1));
                     }
                 }
                 
-                for (int synapseIndex = 0; synapseIndex < neuron->getOutputSynapseCount(); ++synapseIndex) {
-                    const Synapse* synapse = neuron->getOutputSynapse(synapseIndex);
-                    if (!synapse) continue;
+                for (int iSynapseIndex = 0; iSynapseIndex < pNeuron->getOutputSynapseCount(); ++iSynapseIndex) {
+                    const Synapse* pSynapse = pNeuron->getOutputSynapse(iSynapseIndex);
+                    if (!pSynapse) continue;
                     
-                    const Neuron* targetNeuron = synapse->getTargetNeuron();
-                    if (!targetNeuron) continue;
+                    const Neuron* pTargetNeuron = pSynapse->getTargetNeuron();
+                    if (!pTargetNeuron) continue;
                     
                     // Find the global index of the target neuron
-                    int targetGlobalIndex = findNeuronGlobalIndex(network, targetNeuron);
-                    if (targetGlobalIndex >= 0) {
+                    int iTargetGlobalIndex = findNeuronGlobalIndex(network, pTargetNeuron);
+                    if (iTargetGlobalIndex >= 0) {
                         // 根据规范：轴突权重恒为1.0，实际连接权重存储在目标神经元的树突中
                         // 找到目标神经元中对应的输入突触（树突）来获取实际权重
-                        double connectionWeight = 1.0; // 默认权重
-                        for (int inputIdx = 0; inputIdx < targetNeuron->getInputSynapseCount(); ++inputIdx) {
-                            const Synapse* inputSynapse = targetNeuron->getInputSynapse(inputIdx);
-                            if (inputSynapse && inputSynapse->getSourceNeuron() == neuron) {
-                                connectionWeight = inputSynapse->getWeight();
+                        double rConnectionWeight = 1.0; // 默认权重
+                        for (int iInputIdx = 0; iInputIdx < pTargetNeuron->getInputSynapseCount(); ++iInputIdx) {
+                            const Synapse* pInputSynapse = pTargetNeuron->getInputSynapse(iInputIdx);
+                            if (pInputSynapse && pInputSynapse->getSourceNeuron() == pNeuron) {
+                                rConnectionWeight = pInputSynapse->getWeight();
                                 break;
                             }
                         }
                         
-                        file << "S " << globalNeuronIndex << " " << targetGlobalIndex 
-                             << " " << fixed << setprecision(4) << connectionWeight 
+                        file << "S " << iGlobalNeuronIndex << " " << iTargetGlobalIndex 
+                             << " " << fixed << setprecision(4) << rConnectionWeight 
                              << endl;
                     }
                 }
             }
         }
         
-        currentNeuronOffset += layer->getNeuronCount();
+        iCurrentNeuronOffset += layer->getNeuronCount();
     }
     
     return file.good();
@@ -380,17 +380,17 @@ string ANNExporter::getActivationFunctionName(const ActivationFunction* activati
 //【更改记录】
 //-------------------------------------------------------------
 int ANNExporter::findNeuronGlobalIndex(const Network& network, const Neuron* targetNeuron) {
-    int globalIndex = 0;
+    int iGlobalIndex = 0;
     
-    for (int layerIndex = 0; layerIndex < network.getLayerCount(); ++layerIndex) {
-        const Layer* layer = network.getLayer(layerIndex);
+    for (int iLayerIndex = 0; iLayerIndex < network.getLayerCount(); ++iLayerIndex) {
+        const Layer* layer = network.getLayer(iLayerIndex);
         if (!layer) continue;
         
-        for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
-            if (layer->getNeuron(neuronIndex) == targetNeuron) {
-                return globalIndex;
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            if (layer->getNeuron(iNeuronIdx) == targetNeuron) {
+                return iGlobalIndex;
             }
-            globalIndex++;
+            iGlobalIndex++;
         }
     }
     

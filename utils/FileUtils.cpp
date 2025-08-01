@@ -1,6 +1,6 @@
 //-------------------------------------------------------------
 //【文件名】FileUtils.cpp
-//【功能模块和目的】文件操作相关工具函数实现
+//【功能模块和目的】文件操作工具函数实现
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
@@ -22,12 +22,12 @@ using namespace std;
 //【更改记录】
 //-------------------------------------------------------------
 string FileUtils::getFileExtension(const string& filename) {
-    size_t dotPos = filename.find_last_of('.');
-    if (dotPos == string::npos) {
+    size_t uDotPos = filename.find_last_of('.');
+    if (uDotPos == string::npos) {
         return "";
     }
     
-    string extension = filename.substr(dotPos);
+    string extension = filename.substr(uDotPos);
     return toLowerCase(extension);
 }
 
@@ -41,16 +41,16 @@ string FileUtils::getFileExtension(const string& filename) {
 //-------------------------------------------------------------
 string FileUtils::getFilenameWithoutExtension(const string& filepath) {
     // Extract filename from path
-    size_t lastSlash = filepath.find_last_of("/\\");
-    string filename = (lastSlash == string::npos) ? filepath : filepath.substr(lastSlash + 1);
+    size_t uLastSlash = filepath.find_last_of("/\\");
+    string filename = (uLastSlash == string::npos) ? filepath : filepath.substr(uLastSlash + 1);
     
     // Remove extension
-    size_t dotPos = filename.find_last_of('.');
-    if (dotPos == string::npos) {
+    size_t uDotPos = filename.find_last_of('.');
+    if (uDotPos == string::npos) {
         return filename;
     }
     
-    return filename.substr(0, dotPos);
+    return filename.substr(0, uDotPos);
 }
 
 //-------------------------------------------------------------
@@ -62,12 +62,12 @@ string FileUtils::getFilenameWithoutExtension(const string& filepath) {
 //【更改记录】
 //-------------------------------------------------------------
 string FileUtils::getDirectoryPath(const string& filepath) {
-    size_t lastSlash = filepath.find_last_of("/\\");
-    if (lastSlash == string::npos) {
+    size_t uLastSlash = filepath.find_last_of("/\\");
+    if (uLastSlash == string::npos) {
         return "."; // Current directory
     }
     
-    return filepath.substr(0, lastSlash);
+    return filepath.substr(0, uLastSlash);
 }
 
 //-------------------------------------------------------------
@@ -216,13 +216,13 @@ string FileUtils::toLowerCase(const string& str) {
 //【更改记录】
 //-------------------------------------------------------------
 string FileUtils::trim(const string& str) {
-    size_t first = str.find_first_not_of(" \t\n\r");
-    if (first == string::npos) {
+    size_t uFirst = str.find_first_not_of(" \t\n\r");
+    if (uFirst == string::npos) {
         return "";
     }
     
-    size_t last = str.find_last_not_of(" \t\n\r");
-    return str.substr(first, (last - first + 1));
+    size_t uLast = str.find_last_not_of(" \t\n\r");
+    return str.substr(uFirst, (uLast - uFirst + 1));
 }
 
 //-------------------------------------------------------------

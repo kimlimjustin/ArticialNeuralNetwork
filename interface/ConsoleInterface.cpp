@@ -43,14 +43,12 @@ ConsoleInterface::~ConsoleInterface() = default;
 void ConsoleInterface::run() {
     m_isRunning = true;
     displayInfo("Welcome to Artificial Neural Network System");
-    displayInfo("=========================================");
-    
-    while (m_isRunning) {
+    displayInfo("=========================================");        while (m_isRunning) {
         try {
             displayMainMenu();
-            int choice = getIntInput("Enter your choice: ");
+            int iChoice = getIntInput("Enter your choice: ");
             
-            switch (choice) {
+            switch (iChoice) {
                 case 1:
                     handleImportNetwork();
                     break;
@@ -189,12 +187,12 @@ void ConsoleInterface::handleModifyNetwork() {
         return;
     }
     
-    bool modifying = true;
-    while (modifying) {
+    bool bModifying = true;
+    while (bModifying) {
         displayModificationMenu();
-        int choice = getIntInput("Enter your choice: ");
+        int iChoice = getIntInput("Enter your choice: ");
         
-        switch (choice) {
+        switch (iChoice) {
             case 1:
                 handleLayerOperations();
                 break;
@@ -202,7 +200,7 @@ void ConsoleInterface::handleModifyNetwork() {
                 handleNeuronOperations();
                 break;
             case 0:
-                modifying = false;
+                bModifying = false;
                 break;
             default:
                 displayError("Invalid choice. Please try again.");
@@ -277,33 +275,33 @@ void ConsoleInterface::handleInference() {
         return;
     }
     
-    int inputSize = controller.getInputSize();
-    if (inputSize <= 0) {
+    int iInputSize = controller.getInputSize();
+    if (iInputSize <= 0) {
         displayError("Invalid network input size.");
         return;
     }
     
     // Display information about the expected input format
-    displayInfo("Network expects " + to_string(inputSize) + " input values.");
+    displayInfo("Network expects " + to_string(iInputSize) + " input values.");
     
     // Generate and display an example of input values
     cout << "\nExample input values: ";
-    for (int i = 0; i < inputSize; ++i) {
-        if (i == 0) {
+    for (int iInputIdx = 0; iInputIdx < iInputSize; ++iInputIdx) {
+        if (iInputIdx == 0) {
             cout << "1.0";
-        } else if (i == 1) {
+        } else if (iInputIdx == 1) {
             cout << " 0.5";
-        } else if (i == 2) {
+        } else if (iInputIdx == 2) {
             cout << " -0.3";
         } else {
-            cout << " " << (i % 2 == 0 ? "0.0" : "1.0");
+            cout << " " << (iInputIdx % 2 == 0 ? "0.0" : "1.0");
         }
     }
     cout << endl;
     cout << "Note: Values should be separated by spaces." << endl;
     cout << endl;
     
-    vector<double> inputs = getDoubleVector("Enter input values", inputSize);
+    vector<double> inputs = getDoubleVector("Enter input values", iInputSize);
     
     try {
         vector<double> outputs = controller.runInference(inputs);
@@ -338,9 +336,9 @@ void ConsoleInterface::handleLayerOperations() {
     cout << "3. Delete layer" << endl;
     cout << "0. Back" << endl;
     
-    int choice = getIntInput("Enter your choice: ");
+    int iChoice = getIntInput("Enter your choice: ");
     
-    switch (choice) {
+    switch (iChoice) {
         case 1: {
             string layerInfo = controller.getLayerInformation();
             cout << layerInfo << endl;
@@ -355,8 +353,8 @@ void ConsoleInterface::handleLayerOperations() {
             break;
         }
         case 3: {
-            int layerIndex = getIntInput("Enter layer index to delete: ");
-            if (controller.deleteLayer(layerIndex)) {
+            int iLayerIndex = getIntInput("Enter layer index to delete: ");
+            if (controller.deleteLayer(iLayerIndex)) {
                 displaySuccess("Layer deleted successfully!");
             } else {
                 displayError("Failed to delete layer. Check layer index.");
@@ -390,20 +388,20 @@ void ConsoleInterface::handleNeuronOperations() {
     cout << "5. Connect neurons" << endl;
     cout << "0. Back" << endl;
     
-    int choice = getIntInput("Enter your choice: ");
+    int iChoice = getIntInput("Enter your choice: ");
     
-    switch (choice) {
+    switch (iChoice) {
         case 1: {
-            int layerIndex = getIntInput("Enter layer index: ");
-            string neuronInfo = controller.getNeuronInformation(layerIndex);
+            int iLayerIndex = getIntInput("Enter layer index: ");
+            string neuronInfo = controller.getNeuronInformation(iLayerIndex);
             cout << neuronInfo << endl;
             break;
         }
         case 2: {
-            int layerIndex = getIntInput("Enter layer index: ");
-            int neuronIndex = getIntInput("Enter neuron index: ");
-            double bias = getDoubleInput("Enter new bias value: ");
-            if (controller.modifyNeuronBias(layerIndex, neuronIndex, bias)) {
+            int iLayerIndex = getIntInput("Enter layer index: ");
+            int iNeuronIndex = getIntInput("Enter neuron index: ");
+            double rBias = getDoubleInput("Enter new bias value: ");
+            if (controller.modifyNeuronBias(iLayerIndex, iNeuronIndex, rBias)) {
                 displaySuccess("Neuron bias modified successfully!");
             } else {
                 displayError("Failed to modify neuron bias. Check indices.");
@@ -411,16 +409,16 @@ void ConsoleInterface::handleNeuronOperations() {
             break;
         }
         case 3: {
-            int layerIndex = getIntInput("Enter layer index: ");
-            int neuronIndex = getIntInput("Enter neuron index: ");
-            string connectionInfo = controller.getNeuronConnections(layerIndex, neuronIndex);
+            int iLayerIndex = getIntInput("Enter layer index: ");
+            int iNeuronIndex = getIntInput("Enter neuron index: ");
+            string connectionInfo = controller.getNeuronConnections(iLayerIndex, iNeuronIndex);
             cout << connectionInfo << endl;
             break;
         }
         case 4: {
-            int layerIndex = getIntInput("Enter layer index: ");
-            int neuronIndex = getIntInput("Enter neuron index: ");
-            if (controller.deleteNeuron(layerIndex, neuronIndex)) {
+            int iLayerIndex = getIntInput("Enter layer index: ");
+            int iNeuronIndex = getIntInput("Enter neuron index: ");
+            if (controller.deleteNeuron(iLayerIndex, iNeuronIndex)) {
                 displaySuccess("Neuron deleted successfully!");
             } else {
                 displayError("Failed to delete neuron. Check indices.");
@@ -428,13 +426,13 @@ void ConsoleInterface::handleNeuronOperations() {
             break;
         }
         case 5: {
-            int fromLayer = getIntInput("Enter source layer index: ");
-            int fromNeuron = getIntInput("Enter source neuron index: ");
-            int toLayer = getIntInput("Enter target layer index: ");
-            int toNeuron = getIntInput("Enter target neuron index: ");
-            double weight = getDoubleInput("Enter connection weight: ");
+            int iFromLayer = getIntInput("Enter source layer index: ");
+            int iFromNeuron = getIntInput("Enter source neuron index: ");
+            int iToLayer = getIntInput("Enter target layer index: ");
+            int iToNeuron = getIntInput("Enter target neuron index: ");
+            double rWeight = getDoubleInput("Enter connection weight: ");
             
-            if (controller.connectNeurons(fromLayer, fromNeuron, toLayer, toNeuron, weight)) {
+            if (controller.connectNeurons(iFromLayer, iFromNeuron, iToLayer, iToNeuron, rWeight)) {
                 displaySuccess("Neurons connected successfully!");
             } else {
                 displayError("Failed to connect neurons. Check indices and adjacency.");

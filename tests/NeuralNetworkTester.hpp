@@ -20,8 +20,8 @@
 class NeuralNetworkTester {
 private:
     NetworkController& controller;
-    int passedTests;
-    int totalTests;
+    int iPassedTests;
+    int iTotalTests;
     
     // 私有辅助方法
     //-------------------------------------------------------------
@@ -211,7 +211,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-29
     //【更改记录】
     //-------------------------------------------------------------
-    int getPassedTests() const { return passedTests; }
+    int getPassedTests() const { return iPassedTests; }
     
     //-------------------------------------------------------------
     //【函数名称】getTotalTests
@@ -221,7 +221,7 @@ public:
     //【开发者及日期】林钲凯 2025-07-29
     //【更改记录】
     //-------------------------------------------------------------
-    int getTotalTests() const { return totalTests; }
+    int getTotalTests() const { return iTotalTests; }
     
     //-------------------------------------------------------------
     //【函数名称】getSuccessRate
@@ -232,7 +232,7 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     double getSuccessRate() const { 
-        return totalTests > 0 ? (100.0 * passedTests / totalTests) : 0.0; 
+        return iTotalTests > 0 ? (100.0 * iPassedTests / iTotalTests) : 0.0; 
     }
 };
 

@@ -196,11 +196,11 @@ int Network::getLayerCount() const {
 //【更改记录】
 //-------------------------------------------------------------
 int Network::getNeuronCount() const {
-    int totalNeurons = 0;
+    int iTotalNeurons = 0;
     for (const auto& layer : m_layers) {
-        totalNeurons += layer->getNeuronCount();
+        iTotalNeurons += layer->getNeuronCount();
     }
-    return totalNeurons;
+    return iTotalNeurons;
 }
 
 //-------------------------------------------------------------
@@ -212,11 +212,11 @@ int Network::getNeuronCount() const {
 //【更改记录】
 //-------------------------------------------------------------
 int Network::getSynapseCount() const {
-    int totalSynapses = 0;
+    int iTotalSynapses = 0;
     for (const auto& layer : m_layers) {
-        totalSynapses += layer->getTotalSynapseCount();
+        iTotalSynapses += layer->getTotalSynapseCount();
     }
-    return totalSynapses;
+    return iTotalSynapses;
 }
 
 //-------------------------------------------------------------
@@ -267,15 +267,15 @@ bool Network::isValid() const {
     
     // 根据规范检查所有轴突权重是否为1.0
     for (const auto& layer : m_layers) {
-        for (int i = 0; i < layer->getNeuronCount(); ++i) {
-            const Neuron* neuron = layer->getNeuron(i);
-            if (!neuron) continue;
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* pNeuron = layer->getNeuron(iNeuronIdx);
+            if (!pNeuron) continue;
             
             // Check all output synapses (axons) have weight 1.0
-            for (int j = 0; j < neuron->getOutputSynapseCount(); ++j) {
-                const Synapse* synapse = neuron->getOutputSynapse(j);
-                if (synapse && synapse->isAxon()) {
-                    if (!synapse->isValid()) {
+            for (int iSynapseIdx = 0; iSynapseIdx < pNeuron->getOutputSynapseCount(); ++iSynapseIdx) {
+                const Synapse* pSynapse = pNeuron->getOutputSynapse(iSynapseIdx);
+                if (pSynapse && pSynapse->isAxon()) {
+                    if (!pSynapse->isValid()) {
                         return false; // Synapse validation will check weight == 1.0
                     }
                 }
@@ -314,30 +314,30 @@ vector<double> Network::predict(const vector<double>& inputs) {
     // Forward propagate through all layers
     vector<double> currentOutputs = inputs;
     
-    for (size_t layerIndex = 0; layerIndex < m_layers.size(); ++layerIndex) {
-        Layer* layer = m_layers[layerIndex].get();
+    for (size_t uLayerIndex = 0; uLayerIndex < m_layers.size(); ++uLayerIndex) {
+        Layer* pLayer = m_layers[uLayerIndex].get();
         
-        if (layerIndex == 0) {
+        if (uLayerIndex == 0) {
             // For first layer, each neuron gets one input value
             // Check if neurons have input synapses
             vector<vector<double>> layerInputs;
-            for (int i = 0; i < layer->getNeuronCount(); ++i) {
-                const Neuron* neuron = layer->getNeuron(i);
-                if (neuron && neuron->getInputSynapseCount() > 0) {
+            for (int iNeuronIdx = 0; iNeuronIdx < pLayer->getNeuronCount(); ++iNeuronIdx) {
+                const Neuron* pNeuron = pLayer->getNeuron(iNeuronIdx);
+                if (pNeuron && pNeuron->getInputSynapseCount() > 0) {
                     // Neuron expects inputs through synapses
-                    layerInputs.push_back({inputs[i]});
+                    layerInputs.push_back({inputs[iNeuronIdx]});
                 } else {
                     // Neuron can accept direct input
-                    layerInputs.push_back({inputs[i]});
+                    layerInputs.push_back({inputs[iNeuronIdx]});
                 }
             }
-            currentOutputs = layer->forwardPropagate(layerInputs);
+            currentOutputs = pLayer->forwardPropagate(layerInputs);
         } else {
             // For subsequent layers, neurons get outputs from previous layer
             vector<vector<double>> layerInputs;
-            for (int neuronIndex = 0; neuronIndex < layer->getNeuronCount(); ++neuronIndex) {
-                const Neuron* neuron = layer->getNeuron(neuronIndex);
-                if (neuron && neuron->getInputSynapseCount() > 0) {
+            for (int iNeuronIndex = 0; iNeuronIndex < pLayer->getNeuronCount(); ++iNeuronIndex) {
+                const Neuron* pNeuron = pLayer->getNeuron(iNeuronIndex);
+                if (pNeuron && pNeuron->getInputSynapseCount() > 0) {
                     // Neuron has input synapses, provide all previous outputs
                     layerInputs.push_back(currentOutputs);
                 } else {
@@ -345,7 +345,7 @@ vector<double> Network::predict(const vector<double>& inputs) {
                     layerInputs.push_back(currentOutputs);
                 }
             }
-            currentOutputs = layer->forwardPropagate(layerInputs);
+            currentOutputs = pLayer->forwardPropagate(layerInputs);
         }
     }
     
@@ -392,8 +392,8 @@ bool Network::connectAllLayers(double defaultWeight) {
         return true; // Nothing to connect
     }
     
-    for (size_t i = 0; i < m_layers.size() - 1; ++i) {
-        if (!m_layers[i]->connectToLayer(*m_layers[i + 1])) {
+    for (size_t uLayerIdx = 0; uLayerIdx < m_layers.size() - 1; ++uLayerIdx) {
+        if (!m_layers[uLayerIdx]->connectToLayer(*m_layers[uLayerIdx + 1])) {
             return false;
         }
     }
@@ -417,12 +417,12 @@ string Network::getStructureInfo() const {
     oss << "Total Synapses (含输入输出): " << getSynapseCount() << "\n";
     oss << "Valid: " << (isValid() ? "Yes" : "No") << "\n";
     
-    for (int i = 0; i < getLayerCount(); ++i) {
-        const Layer* layer = getLayer(i);
-        oss << "  Layer " << i << ": " << layer->getNeuronCount() << " neurons\n";
+    for (int iLayerIdx = 0; iLayerIdx < getLayerCount(); ++iLayerIdx) {
+        const Layer* pLayer = getLayer(iLayerIdx);
+        oss << "  Layer " << iLayerIdx << ": " << pLayer->getNeuronCount() << " neurons\n";
     }
     
-    return oss.str();
+    return oss.str();                                                                                                                                                                       
 }
 
 //-------------------------------------------------------------
@@ -509,50 +509,50 @@ bool Network::hasCycles() const {
     
     // Initialize all neurons as unvisited
     for (const auto& layer : m_layers) {
-        for (int i = 0; i < layer->getNeuronCount(); ++i) {
-            const Neuron* neuron = layer->getNeuron(i);
-            if (neuron) {
-                neuronStates[neuron] = 0;
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* pNeuron = layer->getNeuron(iNeuronIdx);
+            if (pNeuron) {
+                neuronStates[pNeuron] = 0;
             }
         }
     }
     
     // DFS function to detect cycles
-    function<bool(const Neuron*)> dfsHasCycle = [&](const Neuron* neuron) -> bool {
-        if (neuronStates[neuron] == 1) {
+    function<bool(const Neuron*)> dfsHasCycle = [&](const Neuron* pNeuron) -> bool {
+        if (neuronStates[pNeuron] == 1) {
             // Found a back edge - cycle detected
             return true;
         }
         
-        if (neuronStates[neuron] == 2) {
+        if (neuronStates[pNeuron] == 2) {
             // Already processed this neuron
             return false;
         }
         
         // Mark as visiting
-        neuronStates[neuron] = 1;
+        neuronStates[pNeuron] = 1;
         
         // Check all outgoing connections
-        for (int i = 0; i < neuron->getOutputSynapseCount(); ++i) {
-            const Synapse* synapse = neuron->getOutputSynapse(i);
-            if (synapse && synapse->getTargetNeuron()) {
-                if (dfsHasCycle(synapse->getTargetNeuron())) {
+        for (int iSynapseIdx = 0; iSynapseIdx < pNeuron->getOutputSynapseCount(); ++iSynapseIdx) {
+            const Synapse* pSynapse = pNeuron->getOutputSynapse(iSynapseIdx);
+            if (pSynapse && pSynapse->getTargetNeuron()) {
+                if (dfsHasCycle(pSynapse->getTargetNeuron())) {
                     return true;
                 }
             }
         }
         
         // Mark as completely visited
-        neuronStates[neuron] = 2;
+        neuronStates[pNeuron] = 2;
         return false;
     };
     
     // Check each unvisited neuron
     for (const auto& layer : m_layers) {
-        for (int i = 0; i < layer->getNeuronCount(); ++i) {
-            const Neuron* neuron = layer->getNeuron(i);
-            if (neuron && neuronStates[neuron] == 0) {
-                if (dfsHasCycle(neuron)) {
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            const Neuron* pNeuron = layer->getNeuron(iNeuronIdx);
+            if (pNeuron && neuronStates[pNeuron] == 0) {
+                if (dfsHasCycle(pNeuron)) {
                     return true;
                 }
             }
@@ -581,12 +581,12 @@ bool Network::allNeuronsParticipate() const {
             return false;
         }
     }
-    
+
     // Check input layer (first layer)
-    const Layer* inputLayer = m_layers[0].get();
-    for (int i = 0; i < inputLayer->getNeuronCount(); ++i) {
-        const Neuron* neuron = inputLayer->getNeuron(i);
-        if (!neuron) {
+    const Layer* pInputLayer = m_layers[0].get();
+    for (int iNeuronIdx = 0; iNeuronIdx < pInputLayer->getNeuronCount(); ++iNeuronIdx) {
+        const Neuron* pNeuron = pInputLayer->getNeuron(iNeuronIdx);
+        if (!pNeuron) {
             return false;
         }
         // Input neurons should have some way to receive input
@@ -594,10 +594,10 @@ bool Network::allNeuronsParticipate() const {
     }
     
     // Check output layer (last layer)
-    const Layer* outputLayer = m_layers.back().get();
-    for (int i = 0; i < outputLayer->getNeuronCount(); ++i) {
-        const Neuron* neuron = outputLayer->getNeuron(i);
-        if (!neuron) {
+    const Layer* pOutputLayer = m_layers.back().get();
+    for (int iNeuronIdx = 0; iNeuronIdx < pOutputLayer->getNeuronCount(); ++iNeuronIdx) {
+        const Neuron* pNeuron = pOutputLayer->getNeuron(iNeuronIdx);
+        if (!pNeuron) {
             return false;
         }
         // Output neurons should have some way to provide output
@@ -606,15 +606,15 @@ bool Network::allNeuronsParticipate() const {
     
     // Check hidden layers (all layers except first and last if there are more than 2 layers)
     if (m_layers.size() > 2) {
-        for (size_t layerIdx = 1; layerIdx < m_layers.size() - 1; ++layerIdx) {
-            const Layer* layer = m_layers[layerIdx].get();
-            for (int i = 0; i < layer->getNeuronCount(); ++i) {
-                const Neuron* neuron = layer->getNeuron(i);
-                if (!neuron) {
+        for (size_t uLayerIdx = 1; uLayerIdx < m_layers.size() - 1; ++uLayerIdx) {
+            const Layer* pLayer = m_layers[uLayerIdx].get();
+            for (int iNeuronIdx = 0; iNeuronIdx < pLayer->getNeuronCount(); ++iNeuronIdx) {
+                const Neuron* pNeuron = pLayer->getNeuron(iNeuronIdx);
+                if (!pNeuron) {
                     return false;
                 }
                 // Hidden neurons should have both input and output connections
-                if (neuron->getInputSynapseCount() == 0 && neuron->getOutputSynapseCount() == 0) {
+                if (pNeuron->getInputSynapseCount() == 0 && pNeuron->getOutputSynapseCount() == 0) {
                     // Isolated neuron - doesn't participate in data flow
                     return false;
                 }

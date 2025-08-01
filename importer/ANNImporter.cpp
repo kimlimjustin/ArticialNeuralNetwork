@@ -6,6 +6,14 @@
 //-------------------------------------------------------------
 
 #include "ANNImporter.hpp"
+#include "../model/neural_components/Network.hpp"
+#include "../model/neural_components/Layer.hpp"
+#include "../model/neural_components/Neuron.hpp"
+#include "../model/neural_components/Synapse.hpp"
+#include "../model/activation_functions/LinearFunction.hpp"
+#include "../model/activation_functions/SigmoidFunction.hpp"
+#include "../model/activation_functions/ReLUFunction.hpp"
+#include "../model/activation_functions/TanhFunction.hpp"
 #include "../model/activation_functions/ActivationFunction.hpp"
 #include "../utils/FileUtils.hpp"
 #include <sstream>
@@ -169,23 +177,23 @@ bool ANNImporter::parseLayerInformation(ifstream& file, Network& network) {
         }
         
         istringstream iss(line);
-        char prefix;
-        iss >> prefix;
+        char cPrefix;
+        iss >> cPrefix;
         
-        if (prefix == 'N') {
+        if (cPrefix == 'N') {
             // Neuron definition: N bias activation_type
-            double bias;
-            int activationType;
-            if (iss >> bias >> activationType) {
-                neurons.push_back({bias, activationType});
+            double rBias;
+            int iActivationType;
+            if (iss >> rBias >> iActivationType) {
+                neurons.push_back({rBias, iActivationType});
             }
         }
-        else if (prefix == 'L') {
+        else if (cPrefix == 'L') {
             // Layer definition: L start_neuron end_neuron
-            int startNeuron;
-            int endNeuron;
-            if (iss >> startNeuron >> endNeuron) {
-                layers.push_back({startNeuron, endNeuron});
+            int iStartNeuron;
+            int iEndNeuron;
+            if (iss >> iStartNeuron >> iEndNeuron) {
+                layers.push_back({iStartNeuron, iEndNeuron});
             }
         }
     }
@@ -194,9 +202,9 @@ bool ANNImporter::parseLayerInformation(ifstream& file, Network& network) {
     for (const auto& layerInfo : layers) {
         unique_ptr<Layer> layer(new Layer());
         
-        for (int i = layerInfo.first; i <= layerInfo.second; ++i) {
-            if (i >= 0 && i < static_cast<int>(neurons.size())) {
-                auto neuron = createNeuronWithActivation(neurons[i].first, neurons[i].second);
+        for (int iNeuronIdx = layerInfo.first; iNeuronIdx <= layerInfo.second; ++iNeuronIdx) {
+            if (iNeuronIdx >= 0 && iNeuronIdx < static_cast<int>(neurons.size())) {
+                auto neuron = createNeuronWithActivation(neurons[iNeuronIdx].first, neurons[iNeuronIdx].second);
                 layer->addNeuron(move(neuron));
             }
         }
@@ -216,7 +224,7 @@ bool ANNImporter::parseLayerInformation(ifstream& file, Network& network) {
 //【更改记录】
 //-------------------------------------------------------------
 bool ANNImporter::parseNeuronInformation(ifstream& file, Layer& layer, int neuronCount) {
-    for (int i = 0; i < neuronCount; ++i) {
+    for (int iNeuronIdx = 0; iNeuronIdx < neuronCount; ++iNeuronIdx) {
         skipWhitespaceAndComments(file);
         
         string token = readToken(file);
@@ -225,8 +233,8 @@ bool ANNImporter::parseNeuronInformation(ifstream& file, Layer& layer, int neuro
         }
         
         // Read bias
-        double bias;
-        file >> bias;
+        double rBias;
+        file >> rBias;
         if (file.fail()) {
             return false;
         }
@@ -243,7 +251,7 @@ bool ANNImporter::parseNeuronInformation(ifstream& file, Layer& layer, int neuro
         }
         
         // Create neuron
-        auto neuron = unique_ptr<Neuron>(new Neuron(bias, move(activationFunc)));
+        auto neuron = unique_ptr<Neuron>(new Neuron(rBias, move(activationFunc)));
         layer.addNeuron(move(neuron));
     }
     
@@ -273,54 +281,54 @@ bool ANNImporter::parseConnections(ifstream& file, Network& network) {
         }
         
         istringstream iss(line);
-        char prefix;
-        iss >> prefix;
+        char cPrefix;
+        iss >> cPrefix;
         
-        if (prefix == 'S') {
-            int fromNeuron;
-            int toNeuron;
-            double weight;
+        if (cPrefix == 'S') {
+            int iFromNeuron;
+            int iToNeuron;
+            double rWeight;
             
-            if (iss >> fromNeuron >> toNeuron >> weight) {
+            if (iss >> iFromNeuron >> iToNeuron >> rWeight) {
                 // Handle external input connections (from -1)
-                if (fromNeuron == -1 && toNeuron >= 0) {
+                if (iFromNeuron == -1 && iToNeuron >= 0) {
                     // This is a dendrite (input synapse) - weight can be any value
-                    Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
-                    if (targetNeuron) {
-                        unique_ptr<Synapse> synapse(new Synapse(weight, nullptr, targetNeuron, false));
-                        targetNeuron->addInputSynapse(move(synapse));
+                    Neuron* pTargetNeuron = findNeuronByGlobalIndex(network, iToNeuron);
+                    if (pTargetNeuron) {
+                        unique_ptr<Synapse> synapse(new Synapse(rWeight, nullptr, pTargetNeuron, false));
+                        pTargetNeuron->addInputSynapse(move(synapse));
                     }
                     continue;
                 }
                 
                 // Handle external output connections (to -1)
-                if (toNeuron == -1 && fromNeuron >= 0) {
+                if (iToNeuron == -1 && iFromNeuron >= 0) {
                     // This is an axon (output synapse) - weight MUST be 1.0 per specification
-                    if (weight != 1.0) {
+                    if (rWeight != 1.0) {
                         // Record invalid axon weight but continue importing with corrected weight
                         ostringstream oss;
-                        oss << "Invalid axon weight " << weight << " for connection from neuron " 
-                            << fromNeuron << " to output (should be 1.0)";
+                        oss << "Invalid axon weight " << rWeight << " for connection from neuron " 
+                            << iFromNeuron << " to output (should be 1.0)";
                         invalidAxonConnections.push_back(oss.str());
                     }
-                    Neuron* sourceNeuron = findNeuronByGlobalIndex(network, fromNeuron);
-                    if (sourceNeuron) {
+                    Neuron* pSourceNeuron = findNeuronByGlobalIndex(network, iFromNeuron);
+                    if (pSourceNeuron) {
                         // Create synapse with corrected weight (constructor will force 1.0 anyway)
-                        unique_ptr<Synapse> synapse(new Synapse(1.0, sourceNeuron, nullptr, true));
-                        sourceNeuron->addOutputSynapse(move(synapse));
+                        unique_ptr<Synapse> synapse(new Synapse(1.0, pSourceNeuron, nullptr, true));
+                        pSourceNeuron->addOutputSynapse(move(synapse));
                     }
                     continue;
                 }
                 
                 // Handle inter-neuron connections
-                if (fromNeuron >= 0 && toNeuron >= 0) {
+                if (iFromNeuron >= 0 && iToNeuron >= 0) {
                     // For inter-neuron connections, connectTo() will create both axon (weight 1.0) 
                     // and dendrite (weight from file). The actual connection weight goes to the dendrite.
-                    Neuron* sourceNeuron = findNeuronByGlobalIndex(network, fromNeuron);
-                    Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
+                    Neuron* pSourceNeuron = findNeuronByGlobalIndex(network, iFromNeuron);
+                    Neuron* pTargetNeuron = findNeuronByGlobalIndex(network, iToNeuron);
                     
-                    if (sourceNeuron && targetNeuron) {
-                        sourceNeuron->connectTo(*targetNeuron, weight);
+                    if (pSourceNeuron && pTargetNeuron) {
+                        pSourceNeuron->connectTo(*pTargetNeuron, rWeight);
                     }
                 }
             }
@@ -452,17 +460,17 @@ unique_ptr<Neuron> ANNImporter::createNeuronWithActivation(double bias, int acti
 //【更改记录】
 //-------------------------------------------------------------
 Neuron* ANNImporter::findNeuronByGlobalIndex(Network& network, int globalIndex) {
-    int currentIndex = 0;
+    int iCurrentIndex = 0;
     
-    for (int layerIdx = 0; layerIdx < network.getLayerCount(); ++layerIdx) {
-        Layer* layer = network.getLayer(layerIdx);
+    for (int iLayerIdx = 0; iLayerIdx < network.getLayerCount(); ++iLayerIdx) {
+        Layer* layer = network.getLayer(iLayerIdx);
         if (!layer) continue;
         
-        for (int neuronIdx = 0; neuronIdx < layer->getNeuronCount(); ++neuronIdx) {
-            if (currentIndex == globalIndex) {
-                return layer->getNeuron(neuronIdx);
+        for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+            if (iCurrentIndex == globalIndex) {
+                return layer->getNeuron(iNeuronIdx);
             }
-            currentIndex++;
+            iCurrentIndex++;
         }
     }
     

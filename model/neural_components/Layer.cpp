@@ -31,7 +31,7 @@ Layer::Layer() {
 //【更改记录】
 //-------------------------------------------------------------
 Layer::Layer(int neuronCount, double bias, unique_ptr<ActivationFunction> activationFunction) {
-    for (int i = 0; i < neuronCount; ++i) {
+    for (int iNeuronIdx = 0; iNeuronIdx < neuronCount; ++iNeuronIdx) {
         unique_ptr<ActivationFunction> neuronActivation = nullptr;
         if (activationFunction) {
             neuronActivation = activationFunction->clone();
@@ -255,20 +255,20 @@ void Layer::clear() {
 //【更改记录】
 //-------------------------------------------------------------
 int Layer::getTotalSynapseCount() const {
-    int totalSynapses = 0;
+    int iTotalSynapses = 0;
     for (const auto& neuron : m_neurons) {
         // Count input synapses to avoid double counting internal connections
-        totalSynapses += neuron->getInputSynapseCount();
+        iTotalSynapses += neuron->getInputSynapseCount();
         
         // Also count output synapses that connect to external outputs (target = nullptr)
-        for (int i = 0; i < neuron->getOutputSynapseCount(); ++i) {
-            const Synapse* synapse = neuron->getOutputSynapse(i);
+        for (int iSynapseIdx = 0; iSynapseIdx < neuron->getOutputSynapseCount(); ++iSynapseIdx) {
+            const Synapse* synapse = neuron->getOutputSynapse(iSynapseIdx);
             if (synapse && synapse->getTargetNeuron() == nullptr) {
-                totalSynapses++; // Count external output synapses
+                iTotalSynapses++; // Count external output synapses
             }
         }
     }
-    return totalSynapses;
+    return iTotalSynapses;
 }
 
 //-------------------------------------------------------------
@@ -284,20 +284,20 @@ bool Layer::connectToLayer(Layer& targetLayer, const vector<vector<double>>& wei
         return false;
     }
     
-    bool useProvidedWeights = !weights.empty() && 
+    bool bUseProvidedWeights = !weights.empty() && 
                              weights.size() == static_cast<size_t>(getNeuronCount()) &&
                              weights[0].size() == static_cast<size_t>(targetLayer.getNeuronCount());
     
-    for (int i = 0; i < getNeuronCount(); ++i) {
-        for (int j = 0; j < targetLayer.getNeuronCount(); ++j) {
-            double weight = useProvidedWeights ? weights[i][j] : 1.0; // Default weight
+    for (int iNeuronIdx = 0; iNeuronIdx < getNeuronCount(); ++iNeuronIdx) {
+        for (int iTargetIdx = 0; iTargetIdx < targetLayer.getNeuronCount(); ++iTargetIdx) {
+            double rWeight = bUseProvidedWeights ? weights[iNeuronIdx][iTargetIdx] : 1.0; // Default weight
             
-            Neuron* targetNeuron = targetLayer.getNeuron(j);
-            if (!targetNeuron) {
+            Neuron* pTargetNeuron = targetLayer.getNeuron(iTargetIdx);
+            if (!pTargetNeuron) {
                 return false; // Invalid target neuron
             }
             
-            if (!m_neurons[i]->connectTo(*targetNeuron, weight)) {
+            if (!m_neurons[iNeuronIdx]->connectTo(*pTargetNeuron, rWeight)) {
                 return false;
             }
         }

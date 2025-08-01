@@ -179,10 +179,10 @@ string NetworkController::getLayerInformation() const {
     ostringstream oss;
     oss << "Layer Information:\n";
     
-    for (int i = 0; i < m_network->getLayerCount(); ++i) {
-        const Layer* layer = m_network->getLayer(i);
+    for (int iLayerIdx = 0; iLayerIdx < m_network->getLayerCount(); ++iLayerIdx) {
+        const Layer* layer = m_network->getLayer(iLayerIdx);
         if (layer) {
-            oss << "  Layer " << i << ": " << layer->getNeuronCount() << " neurons\n";
+            oss << "  Layer " << iLayerIdx << ": " << layer->getNeuronCount() << " neurons\n";
         }
     }
     
@@ -209,11 +209,10 @@ string NetworkController::getNeuronInformation(int layerIndex) const {
     
     ostringstream oss;
     oss << "Neurons in Layer " << layerIndex << ":\n";
-    
-    for (int i = 0; i < layer->getNeuronCount(); ++i) {
-        const Neuron* neuron = layer->getNeuron(i);
-        if (neuron) {
-            oss << "  Neuron " << i << ": bias = " << neuron->getBias() << "\n";
+    for (int iNeuronIdx = 0; iNeuronIdx < layer->getNeuronCount(); ++iNeuronIdx) {
+        const Neuron* pNeuron = layer->getNeuron(iNeuronIdx);
+        if (pNeuron) {
+            oss << "  Neuron " << iNeuronIdx << ": bias = " << pNeuron->getBias() << "\n";
         }
     }
     
@@ -388,15 +387,15 @@ bool NetworkController::connectNeurons(int fromLayer, int fromNeuron, int toLaye
         return false;
     }
     
-    Neuron* sourceNeuron = sourceLayer->getNeuron(fromNeuron);
-    Neuron* targetNeuron = targetLayer->getNeuron(toNeuron);
+    Neuron* pSourceNeuron = sourceLayer->getNeuron(fromNeuron);
+    Neuron* pTargetNeuron = targetLayer->getNeuron(toNeuron);
     
-    if (!sourceNeuron || !targetNeuron) {
+    if (!pSourceNeuron || !pTargetNeuron) {
         return false;
     }
     
     try {
-        return sourceNeuron->connectTo(*targetNeuron, weight);
+        return pSourceNeuron->connectTo(*pTargetNeuron, weight);
     }
     catch (const exception&) {
         return false;
@@ -460,8 +459,8 @@ string NetworkController::getValidationDetails() const {
     ostringstream oss;
     
     // Basic validation result
-    bool isValid = m_network->isValid();
-    oss << "Network Validation: " << (isValid ? "PASSED" : "FAILED") << "\n";
+    bool bIsValid = m_network->isValid();
+    oss << "Network Validation: " << (bIsValid ? "PASSED" : "FAILED") << "\n";
     
     // If there are import errors, show them
     if (m_network->hasImportErrors()) {
@@ -469,7 +468,7 @@ string NetworkController::getValidationDetails() const {
         oss << m_network->getImportErrorMessage() << "\n";
         oss << "\nNote: The network has been auto-corrected during import, but the original file contains specification violations.\n";
         oss << "Please review and correct the source file to eliminate these warnings.\n";
-    } else if (!isValid) {
+    } else if (!bIsValid) {
         oss << "\nNetwork structure is invalid. Please check:\n";
         oss << "- All layers have at least one neuron\n";
         oss << "- Network has at least one layer\n";

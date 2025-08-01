@@ -61,8 +61,8 @@ bool BaseImporter::validateImportedNetwork(const Network* network) const {
     }
     
     // Check that each layer has at least one neuron
-    for (int i = 0; i < network->getLayerCount(); ++i) {
-        const Layer* layer = network->getLayer(i);
+    for (int iLayerIdx = 0; iLayerIdx < network->getLayerCount(); ++iLayerIdx) {
+        const Layer* layer = network->getLayer(iLayerIdx);
         if (!layer || layer->getNeuronCount() == 0) {
             return false;
         }
