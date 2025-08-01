@@ -31,8 +31,7 @@ ConsoleInterface::ConsoleInterface() : m_isRunning(false) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-ConsoleInterface::~ConsoleInterface() {
-}
+ConsoleInterface::~ConsoleInterface() = default;
 //-------------------------------------------------------------
 //【函数名称】run
 //【函数功能】主循环，处理用户交互
@@ -110,7 +109,7 @@ void ConsoleInterface::displayMainMenu() const {
     cout << "\n=== Main Menu ===" << endl;
     cout << "1. Import Network" << endl;
     cout << "2. Export Network" << endl;
-    cout << "3. Modify Network" << endl;
+    cout << "3. Network Details and Modify Network" << endl;
     cout << "4. Display Statistics" << endl;
     cout << "5. Validate Network" << endl;
     cout << "6. Run Inference" << endl;
@@ -247,10 +246,14 @@ void ConsoleInterface::handleValidateNetwork() {
         return;
     }
     
+    // Get detailed validation information
+    string validationDetails = controller.getValidationDetails();
+    cout << "[INFO] " << validationDetails << endl;
+    
     if (controller.validateNetwork()) {
-        displaySuccess("Network is valid and ready for inference!");
+        displaySuccess("Network validation completed - see details above.");
     } else {
-        displayError("Network validation failed. Please check network structure.");
+        displayError("Network validation failed - see details above.");
     }
 }
 

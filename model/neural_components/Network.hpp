@@ -26,6 +26,11 @@ class Network {
 private:
     vector<unique_ptr<Layer>> m_layers;  ///< Collection of network layers
     string m_name;                            ///< Network name/identifier
+    
+    // Validation cache for import errors
+    mutable bool m_hasImportErrors;           ///< Whether import had validation errors
+    mutable string m_importErrorMessage;     ///< Detailed error message from import
+    mutable bool m_validationCacheValid;     ///< Whether validation cache is current
 
 public:
     //-------------------------------------------------------------
@@ -247,6 +252,56 @@ public:
     //【更改记录】
     //-------------------------------------------------------------
     bool allNeuronsParticipate() const;
+
+    //-------------------------------------------------------------
+    //【函数名称】setImportError
+    //【函数功能】设置导入错误信息（用于缓存验证错误）
+    //【参数】errorMessage：错误信息
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    void setImportError(const string& errorMessage);
+    
+    //-------------------------------------------------------------
+    //【函数名称】clearImportErrors
+    //【函数功能】清除导入错误信息（网络修改后调用）
+    //【参数】无
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    void clearImportErrors();
+    
+    //-------------------------------------------------------------
+    //【函数名称】hasImportErrors
+    //【函数功能】检查是否有导入错误
+    //【参数】无
+    //【返回值】bool，是否有导入错误
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    bool hasImportErrors() const;
+    
+    //-------------------------------------------------------------
+    //【函数名称】getImportErrorMessage
+    //【函数功能】获取导入错误信息
+    //【参数】无
+    //【返回值】string，错误信息
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    string getImportErrorMessage() const;
+    
+    //-------------------------------------------------------------
+    //【函数名称】invalidateValidationCache
+    //【函数功能】使验证缓存失效（网络修改后调用）
+    //【参数】无
+    //【返回值】无
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    void invalidateValidationCache();
 };
 
 #endif // Network_hpp

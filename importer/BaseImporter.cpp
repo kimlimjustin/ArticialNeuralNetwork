@@ -55,6 +55,19 @@ bool BaseImporter::validateImportedNetwork(const Network* network) const {
         return false;
     }
     
-    // Basic validation - can be enhanced
-    return network->getLayerCount() > 0;
+    // Comprehensive validation of imported network
+    if (network->getLayerCount() == 0) {
+        return false;
+    }
+    
+    // Check that each layer has at least one neuron
+    for (int i = 0; i < network->getLayerCount(); ++i) {
+        const Layer* layer = network->getLayer(i);
+        if (!layer || layer->getNeuronCount() == 0) {
+            return false;
+        }
+    }
+    
+    // Use the network's built-in validation
+    return network->isValid();
 }

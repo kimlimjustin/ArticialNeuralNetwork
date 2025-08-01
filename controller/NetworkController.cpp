@@ -34,8 +34,7 @@ NetworkController::NetworkController() : m_network(nullptr) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-NetworkController::~NetworkController() {
-}
+NetworkController::~NetworkController() = default;
 
 //-------------------------------------------------------------
 //【函数名称】getInstance
@@ -121,9 +120,9 @@ bool NetworkController::hasNetwork() const {
 
 //-------------------------------------------------------------
 //【函数名称】validateNetwork
-//【函数功能】验证神经网络的有效性
+//【函数功能】验证当前网络结构
 //【参数】无
-//【返回值】bool，网络是否有效
+//【返回值】bool，网络有效返回true，否则返回false
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
@@ -131,6 +130,7 @@ bool NetworkController::validateNetwork() const {
     if (!hasNetwork()) {
         return false;
     }
+    
     return m_network->isValid();
 }
 
@@ -151,8 +151,14 @@ string NetworkController::getNetworkStatistics() const {
     oss << "Network Statistics:\n";
     oss << "  Total Layers: " << m_network->getLayerCount() << "\n";
     oss << "  Total Neurons: " << m_network->getNeuronCount() << "\n";
-    oss << "  Total Synapses: " << m_network->getSynapseCount() << "\n";
+    oss << "  Total Synapses (含输入输出): " << m_network->getSynapseCount() << "\n";
     oss << "  Valid: " << (m_network->isValid() ? "Yes" : "No");
+    
+    // Include import error information if any
+    if (m_network->hasImportErrors()) {
+        oss << "\n\n[IMPORT WARNINGS]\n";
+        oss << m_network->getImportErrorMessage();
+    }
     
     return oss.str();
 }
@@ -262,6 +268,8 @@ bool NetworkController::addLayer() {
     
     try {
         m_network->addLayer(unique_ptr<Layer>(new Layer()));
+        // Clear import errors when network is modified
+        m_network->clearImportErrors();
         return true;
     }
     catch (const exception&) {
@@ -283,7 +291,12 @@ bool NetworkController::deleteLayer(int layerIndex) {
     }
     
     try {
-        return m_network->removeLayer(layerIndex);
+        bool result = m_network->removeLayer(layerIndex);
+        if (result) {
+            // Clear import errors when network is modified
+            m_network->clearImportErrors();
+        }
+        return result;
     }
     catch (const exception&) {
         return false;
@@ -315,6 +328,8 @@ bool NetworkController::modifyNeuronBias(int layerIndex, int neuronIndex, double
     
     try {
         neuron->setBias(bias);
+        // Clear import errors when network is modified
+        m_network->clearImportErrors();
         return true;
     }
     catch (const exception&) {
@@ -427,4 +442,42 @@ vector<double> NetworkController::runInference(const vector<double>& inputs) con
     }
     
     return m_network->predict(inputs);
+}
+
+//-------------------------------------------------------------
+//【函数名称】getValidationDetails
+//【函数功能】获取详细的验证信息，包括导入错误
+//【参数】无
+//【返回值】string，包含详细验证信息的字符串
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+string NetworkController::getValidationDetails() const {
+    if (!hasNetwork()) {
+        return "No network loaded.";
+    }
+    
+    ostringstream oss;
+    
+    // Basic validation result
+    bool isValid = m_network->isValid();
+    oss << "Network Validation: " << (isValid ? "PASSED" : "FAILED") << "\n";
+    
+    // If there are import errors, show them
+    if (m_network->hasImportErrors()) {
+        oss << "\nIMPORT VALIDATION ERRORS:\n";
+        oss << m_network->getImportErrorMessage() << "\n";
+        oss << "\nNote: The network has been auto-corrected during import, but the original file contains specification violations.\n";
+        oss << "Please review and correct the source file to eliminate these warnings.\n";
+    } else if (!isValid) {
+        oss << "\nNetwork structure is invalid. Please check:\n";
+        oss << "- All layers have at least one neuron\n";
+        oss << "- Network has at least one layer\n";
+        oss << "- All axon weights are 1.0 (per specification)\n";
+        oss << "- Network structure is consistent\n";
+    } else {
+        oss << "\nNetwork structure is valid and ready for inference.";
+    }
+    
+    return oss.str();
 }

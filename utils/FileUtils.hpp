@@ -184,13 +184,7 @@ private:
     //-------------------------------------------------------------
     FileUtils& operator=(const FileUtils& other) = delete;
     
-    //-------------------------------------------------------------
-    //【函数名称】~FileUtils
-    //【函数功能】私有析构函数（工具类）
-    //【开发者及日期】林钲凯 2025-07-27
-    //【更改记录】
-    //-------------------------------------------------------------
-    ~FileUtils() = delete;
+    // Utility class - destructor not needed since class cannot be instantiated
 };
 
 #endif // FileUtils_hpp

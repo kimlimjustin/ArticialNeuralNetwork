@@ -6,6 +6,8 @@
 //-------------------------------------------------------------
 
 #include "NeuralNetworkTester.hpp"
+#include "../model/neural_components/Synapse.hpp"
+#include "../model/neural_components/Neuron.hpp"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -454,6 +456,75 @@ bool NeuralNetworkTester::testMultipleNetworks() {
 }
 
 //-------------------------------------------------------------
+//【函数名称】testInvalidAxonWeights
+//【函数功能】测试轴突权重规范的实现
+//【参数】无
+//【返回值】bool 测试是否通过
+//【开发者及日期】林钲凯 2025-07-29
+//【更改记录】
+//-------------------------------------------------------------
+bool NeuralNetworkTester::testInvalidAxonWeights() {
+    printTestHeader("axon weight specification compliance");
+    
+    try {
+        // 验证轴突权重规范的实现：即使传入非1.0的权重，轴突也应该强制权重为1.0
+        unique_ptr<Neuron> dummyNeuron(new Neuron(0.0, nullptr));
+        
+        // 尝试创建权重为0.5的轴突，但实际权重应该被强制为1.0
+        unique_ptr<Synapse> axon1(new Synapse(0.5, dummyNeuron.get(), nullptr, true));
+        if (axon1->getWeight() != 1.0) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Axon weight should be forced to 1.0, got " << axon1->getWeight() << endl;
+            return false;
+        }
+        
+        // 验证轴突总是有效的（因为权重被强制为1.0）
+        if (!axon1->isValid()) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Axon with forced weight 1.0 should be valid" << endl;
+            return false;
+        }
+        
+        // 验证树突可以有任意权重
+        unique_ptr<Synapse> dendrite1(new Synapse(0.5, nullptr, dummyNeuron.get(), false));
+        if (dendrite1->getWeight() != 0.5) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Dendrite weight should preserve original value, got " << dendrite1->getWeight() << endl;
+            return false;
+        }
+        
+        if (!dendrite1->isValid()) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Dendrite with weight 0.5 should be valid" << endl;
+            return false;
+        }
+        
+        // 验证树突可以有负权重
+        unique_ptr<Synapse> dendrite2(new Synapse(-0.8, nullptr, dummyNeuron.get(), false));
+        if (dendrite2->getWeight() != -0.8) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Dendrite should allow negative weights, got " << dendrite2->getWeight() << endl;
+            return false;
+        }
+        
+        if (!dendrite2->isValid()) {
+            recordTestResult("Axon Weight Specification", false);
+            cout << "  Failed: Dendrite with negative weight should be valid" << endl;
+            return false;
+        }
+        
+        recordTestResult("Axon Weight Specification", true);
+        cout << "  Correctly enforced axon weight = 1.0 and allowed arbitrary dendrite weights" << endl;
+        return true;
+        
+    } catch (const exception& e) {
+        recordTestResult("Axon Weight Specification", false);
+        cout << "  Unexpected error: " << e.what() << endl;
+        return false;
+    }
+}
+
+//-------------------------------------------------------------
 //【函数名称】runAllTests
 //【函数功能】运行所有测试
 //【参数】无
@@ -474,6 +545,7 @@ bool NeuralNetworkTester::runAllTests() {
     testNetworkModification();
     testSaveLoad();
     testErrorHandling();
+    testInvalidAxonWeights();
     
     // 机器学习能力测试
     cout << "\n>>> Machine Learning Capability Tests <<<" << endl;

@@ -237,6 +237,16 @@ public:
     //【更改记录】推理失败时抛出runtime_error异常
     //-------------------------------------------------------------
     vector<double> runInference(const vector<double>& inputs) const;
+    
+    //-------------------------------------------------------------
+    //【函数名称】getValidationDetails
+    //【函数功能】获取详细的验证信息，包括导入错误
+    //【参数】无
+    //【返回值】string，包含详细验证信息的字符串
+    //【开发者及日期】林钲凯 2025-07-27
+    //【更改记录】
+    //-------------------------------------------------------------
+    string getValidationDetails() const;
 };
 
 #endif // NetworkController_hpp

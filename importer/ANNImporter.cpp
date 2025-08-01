@@ -34,8 +34,7 @@ ANNImporter::ANNImporter() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-ANNImporter::~ANNImporter() {
-}
+ANNImporter::~ANNImporter() = default;
 
 //-------------------------------------------------------------
 //【函数名称】importNetwork
@@ -261,6 +260,7 @@ bool ANNImporter::parseNeuronInformation(ifstream& file, Layer& layer, int neuro
 //-------------------------------------------------------------
 bool ANNImporter::parseConnections(ifstream& file, Network& network) {
     string line;
+    vector<string> invalidAxonConnections; // Track invalid axon weights
     
     // Reset file position to beginning  
     file.clear();
@@ -284,7 +284,7 @@ bool ANNImporter::parseConnections(ifstream& file, Network& network) {
             if (iss >> fromNeuron >> toNeuron >> weight) {
                 // Handle external input connections (from -1)
                 if (fromNeuron == -1 && toNeuron >= 0) {
-                    // Create input synapse for the target neuron
+                    // This is a dendrite (input synapse) - weight can be any value
                     Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
                     if (targetNeuron) {
                         unique_ptr<Synapse> synapse(new Synapse(weight, nullptr, targetNeuron, false));
@@ -295,13 +295,27 @@ bool ANNImporter::parseConnections(ifstream& file, Network& network) {
                 
                 // Handle external output connections (to -1)
                 if (toNeuron == -1 && fromNeuron >= 0) {
-                    // These represent outputs - we can ignore them for now
-                    // as they don't affect the network structure
+                    // This is an axon (output synapse) - weight MUST be 1.0 per specification
+                    if (weight != 1.0) {
+                        // Record invalid axon weight but continue importing with corrected weight
+                        ostringstream oss;
+                        oss << "Invalid axon weight " << weight << " for connection from neuron " 
+                            << fromNeuron << " to output (should be 1.0)";
+                        invalidAxonConnections.push_back(oss.str());
+                    }
+                    Neuron* sourceNeuron = findNeuronByGlobalIndex(network, fromNeuron);
+                    if (sourceNeuron) {
+                        // Create synapse with corrected weight (constructor will force 1.0 anyway)
+                        unique_ptr<Synapse> synapse(new Synapse(1.0, sourceNeuron, nullptr, true));
+                        sourceNeuron->addOutputSynapse(move(synapse));
+                    }
                     continue;
                 }
                 
                 // Handle inter-neuron connections
                 if (fromNeuron >= 0 && toNeuron >= 0) {
+                    // For inter-neuron connections, connectTo() will create both axon (weight 1.0) 
+                    // and dendrite (weight from file). The actual connection weight goes to the dendrite.
                     Neuron* sourceNeuron = findNeuronByGlobalIndex(network, fromNeuron);
                     Neuron* targetNeuron = findNeuronByGlobalIndex(network, toNeuron);
                     
@@ -311,6 +325,17 @@ bool ANNImporter::parseConnections(ifstream& file, Network& network) {
                 }
             }
         }
+    }
+    
+    // If we found invalid axon weights, cache the error information
+    if (!invalidAxonConnections.empty()) {
+        ostringstream errorMsg;
+        errorMsg << "File contains invalid axon weights (axon weights must be 1.0 per specification):\n";
+        for (const auto& error : invalidAxonConnections) {
+            errorMsg << "  - " << error << "\n";
+        }
+        errorMsg << "Network has been imported with corrected weights, but original file is non-compliant.";
+        network.setImportError(errorMsg.str());
     }
     
     return true;

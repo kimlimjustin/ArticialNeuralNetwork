@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <set>
 #include <queue>
+#include <map>
+#include <functional>
 
 using namespace std;
 
@@ -22,7 +24,8 @@ using namespace std;
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Network::Network() : m_name("Unnamed Network") {
+Network::Network() : m_name("Unnamed Network"), 
+                 m_hasImportErrors(false), m_importErrorMessage(""), m_validationCacheValid(false) {
 }
 
 //-------------------------------------------------------------
@@ -33,7 +36,8 @@ Network::Network() : m_name("Unnamed Network") {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Network::Network(const string& name) : m_name(name) {
+Network::Network(const string& name) : m_name(name), 
+                                  m_hasImportErrors(false), m_importErrorMessage(""), m_validationCacheValid(false) {
 }
 
 //-------------------------------------------------------------
@@ -44,7 +48,10 @@ Network::Network(const string& name) : m_name(name) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Network::Network(const Network& other) : m_name(other.m_name) {
+Network::Network(const Network& other) : m_name(other.m_name), 
+                                   m_hasImportErrors(other.m_hasImportErrors), 
+                                   m_importErrorMessage(other.m_importErrorMessage),
+                                   m_validationCacheValid(other.m_validationCacheValid) {
     for (const auto& layer : other.m_layers) {
         m_layers.push_back(unique_ptr<Layer>(new Layer(*layer)));
     }
@@ -61,6 +68,9 @@ Network::Network(const Network& other) : m_name(other.m_name) {
 Network& Network::operator=(const Network& other) {
     if (this != &other) {
         m_name = other.m_name;
+        m_hasImportErrors = other.m_hasImportErrors;
+        m_importErrorMessage = other.m_importErrorMessage;
+        m_validationCacheValid = other.m_validationCacheValid;
         m_layers.clear();
         for (const auto& layer : other.m_layers) {
             m_layers.push_back(unique_ptr<Layer>(new Layer(*layer)));
@@ -77,8 +87,7 @@ Network& Network::operator=(const Network& other) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Network::~Network() {
-}
+Network::~Network() = default;
 
 //-------------------------------------------------------------
 //【函数名称】getName
@@ -219,14 +228,19 @@ int Network::getSynapseCount() const {
 //【更改记录】
 //-------------------------------------------------------------
 bool Network::isValid() const {
+    // Check for cached import errors first
+    if (m_hasImportErrors) {
+        return false;
+    }
+    
     // Network must have at least one layer
     if (m_layers.empty()) {
         return false;
     }
     
-    // All layers must be valid
+    // All layers must have at least one neuron
     for (const auto& layer : m_layers) {
-        if (!layer->isValid()) {
+        if (layer->getNeuronCount() == 0) {
             return false;
         }
     }
@@ -249,6 +263,24 @@ bool Network::isValid() const {
     // Check that all neurons participate in data flow
     if (!allNeuronsParticipate()) {
         return false;
+    }
+    
+    // 根据规范检查所有轴突权重是否为1.0
+    for (const auto& layer : m_layers) {
+        for (int i = 0; i < layer->getNeuronCount(); ++i) {
+            const Neuron* neuron = layer->getNeuron(i);
+            if (!neuron) continue;
+            
+            // Check all output synapses (axons) have weight 1.0
+            for (int j = 0; j < neuron->getOutputSynapseCount(); ++j) {
+                const Synapse* synapse = neuron->getOutputSynapse(j);
+                if (synapse && synapse->isAxon()) {
+                    if (!synapse->isValid()) {
+                        return false; // Synapse validation will check weight == 1.0
+                    }
+                }
+            }
+        }
     }
     
     return true;
@@ -293,10 +325,10 @@ vector<double> Network::predict(const vector<double>& inputs) {
                 const Neuron* neuron = layer->getNeuron(i);
                 if (neuron && neuron->getInputSynapseCount() > 0) {
                     // Neuron expects inputs through synapses
-                    layerInputs.push_back({currentOutputs[i]});
+                    layerInputs.push_back({inputs[i]});
                 } else {
                     // Neuron can accept direct input
-                    layerInputs.push_back({currentOutputs[i]});
+                    layerInputs.push_back({inputs[i]});
                 }
             }
             currentOutputs = layer->forwardPropagate(layerInputs);
@@ -382,7 +414,7 @@ string Network::getStructureInfo() const {
     oss << "Network: " << m_name << "\n";
     oss << "Layers: " << getLayerCount() << "\n";
     oss << "Total Neurons: " << getNeuronCount() << "\n";
-    oss << "Total Synapses: " << getSynapseCount() << "\n";
+    oss << "Total Synapses (含输入输出): " << getSynapseCount() << "\n";
     oss << "Valid: " << (isValid() ? "Yes" : "No") << "\n";
     
     for (int i = 0; i < getLayerCount(); ++i) {
@@ -394,6 +426,71 @@ string Network::getStructureInfo() const {
 }
 
 //-------------------------------------------------------------
+//【函数名称】setImportError
+//【函数功能】设置导入错误信息（用于缓存验证错误）
+//【参数】errorMessage：错误信息
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+void Network::setImportError(const string& errorMessage) {
+    m_hasImportErrors = true;
+    m_importErrorMessage = errorMessage;
+    m_validationCacheValid = true;
+}
+
+//-------------------------------------------------------------
+//【函数名称】clearImportErrors
+//【函数功能】清除导入错误信息（网络修改后调用）
+//【参数】无
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+void Network::clearImportErrors() {
+    m_hasImportErrors = false;
+    m_importErrorMessage = "";
+    m_validationCacheValid = false;
+}
+
+//-------------------------------------------------------------
+//【函数名称】hasImportErrors
+//【函数功能】检查是否有导入错误
+//【参数】无
+//【返回值】bool，是否有导入错误
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+bool Network::hasImportErrors() const {
+    return m_hasImportErrors;
+}
+
+//-------------------------------------------------------------
+//【函数名称】getImportErrorMessage
+//【函数功能】获取导入错误信息
+//【参数】无
+//【返回值】string，错误信息
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+string Network::getImportErrorMessage() const {
+    return m_importErrorMessage;
+}
+
+//-------------------------------------------------------------
+//【函数名称】invalidateValidationCache
+//【函数功能】使验证缓存失效（网络修改后调用）
+//【参数】无
+//【返回值】无
+//【开发者及日期】林钲凯 2025-07-27
+//【更改记录】
+//-------------------------------------------------------------
+void Network::invalidateValidationCache() {
+    m_validationCacheValid = false;
+    // Don't clear import errors here - they remain until explicitly cleared
+}
+
+//-------------------------------------------------------------
 //【函数名称】hasCycles
 //【函数功能】检查是否有循环
 //【参数】无
@@ -402,10 +499,66 @@ string Network::getStructureInfo() const {
 //【更改记录】
 //-------------------------------------------------------------
 bool Network::hasCycles() const {
-    // For a feedforward network, there should be no cycles
-    // This is a simplified check - in a proper implementation,
-    // we would perform a topological sort or DFS cycle detection
-    // For now, assume feedforward structure if layers are connected sequentially
+    if (m_layers.empty()) {
+        return false;
+    }
+    
+    // Create a map of all neurons with their states for DFS cycle detection
+    // 0 = unvisited, 1 = visiting (in current path), 2 = visited (completed)
+    map<const Neuron*, int> neuronStates;
+    
+    // Initialize all neurons as unvisited
+    for (const auto& layer : m_layers) {
+        for (int i = 0; i < layer->getNeuronCount(); ++i) {
+            const Neuron* neuron = layer->getNeuron(i);
+            if (neuron) {
+                neuronStates[neuron] = 0;
+            }
+        }
+    }
+    
+    // DFS function to detect cycles
+    function<bool(const Neuron*)> dfsHasCycle = [&](const Neuron* neuron) -> bool {
+        if (neuronStates[neuron] == 1) {
+            // Found a back edge - cycle detected
+            return true;
+        }
+        
+        if (neuronStates[neuron] == 2) {
+            // Already processed this neuron
+            return false;
+        }
+        
+        // Mark as visiting
+        neuronStates[neuron] = 1;
+        
+        // Check all outgoing connections
+        for (int i = 0; i < neuron->getOutputSynapseCount(); ++i) {
+            const Synapse* synapse = neuron->getOutputSynapse(i);
+            if (synapse && synapse->getTargetNeuron()) {
+                if (dfsHasCycle(synapse->getTargetNeuron())) {
+                    return true;
+                }
+            }
+        }
+        
+        // Mark as completely visited
+        neuronStates[neuron] = 2;
+        return false;
+    };
+    
+    // Check each unvisited neuron
+    for (const auto& layer : m_layers) {
+        for (int i = 0; i < layer->getNeuronCount(); ++i) {
+            const Neuron* neuron = layer->getNeuron(i);
+            if (neuron && neuronStates[neuron] == 0) {
+                if (dfsHasCycle(neuron)) {
+                    return true;
+                }
+            }
+        }
+    }
+    
     return false;
 }
 
@@ -418,10 +571,6 @@ bool Network::hasCycles() const {
 //【更改记录】
 //-------------------------------------------------------------
 bool Network::allNeuronsParticipate() const {
-    // Check that all neurons can be reached from input and can reach output
-    // This is a simplified check - in a proper implementation,
-    // we would perform graph traversal to verify connectivity
-    
     if (m_layers.empty()) {
         return false;
     }
@@ -430,6 +579,46 @@ bool Network::allNeuronsParticipate() const {
     for (const auto& layer : m_layers) {
         if (layer->getNeuronCount() == 0) {
             return false;
+        }
+    }
+    
+    // Check input layer (first layer)
+    const Layer* inputLayer = m_layers[0].get();
+    for (int i = 0; i < inputLayer->getNeuronCount(); ++i) {
+        const Neuron* neuron = inputLayer->getNeuron(i);
+        if (!neuron) {
+            return false;
+        }
+        // Input neurons should have some way to receive input
+        // (either external input capability or input synapses)
+    }
+    
+    // Check output layer (last layer)
+    const Layer* outputLayer = m_layers.back().get();
+    for (int i = 0; i < outputLayer->getNeuronCount(); ++i) {
+        const Neuron* neuron = outputLayer->getNeuron(i);
+        if (!neuron) {
+            return false;
+        }
+        // Output neurons should have some way to provide output
+        // (either external output capability or output synapses)
+    }
+    
+    // Check hidden layers (all layers except first and last if there are more than 2 layers)
+    if (m_layers.size() > 2) {
+        for (size_t layerIdx = 1; layerIdx < m_layers.size() - 1; ++layerIdx) {
+            const Layer* layer = m_layers[layerIdx].get();
+            for (int i = 0; i < layer->getNeuronCount(); ++i) {
+                const Neuron* neuron = layer->getNeuron(i);
+                if (!neuron) {
+                    return false;
+                }
+                // Hidden neurons should have both input and output connections
+                if (neuron->getInputSynapseCount() == 0 && neuron->getOutputSynapseCount() == 0) {
+                    // Isolated neuron - doesn't participate in data flow
+                    return false;
+                }
+            }
         }
     }
     

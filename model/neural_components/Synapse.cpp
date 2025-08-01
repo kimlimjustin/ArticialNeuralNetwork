@@ -18,13 +18,23 @@
 //【更改记录】
 //-------------------------------------------------------------
 Synapse::Synapse(double weight, Neuron* sourceNeuron, Neuron* targetNeuron, bool isAxon)
-    : m_weight(weight), m_sourceNeuron(sourceNeuron), 
-      m_targetNeuron(targetNeuron), m_isAxon(isAxon) {
-    // 参数验证：确保神经元指针有效
-    if (targetNeuron == nullptr) {
-        throw std::invalid_argument("Target neuron cannot be null");
+    : m_sourceNeuron(sourceNeuron), m_targetNeuron(targetNeuron), m_isAxon(isAxon) {
+    
+    if (isAxon) {
+        // 根据规范：轴突权重恒为1.0
+        m_weight = 1.0;
+        if (sourceNeuron == nullptr) {
+            throw std::invalid_argument("Axon must have a source neuron");
+        }
+        // Target can be null for external output
+    } else {
+        // 树突：权重可为任意实数，存储实际的连接权重
+        m_weight = weight;
+        if (targetNeuron == nullptr) {
+            throw std::invalid_argument("Dendrite must have a target neuron");
+        }
+        // Source can be null for external input
     }
-    // 源神经元在某些情况下可以为空（如输入层）
 }
 
 //-------------------------------------------------------------
@@ -36,7 +46,7 @@ Synapse::Synapse(double weight, Neuron* sourceNeuron, Neuron* targetNeuron, bool
 //【更改记录】
 //-------------------------------------------------------------
 Synapse::Synapse(const Synapse& other)
-    : m_weight(other.m_weight), m_sourceNeuron(other.m_sourceNeuron),
+    : m_weight(other.m_isAxon ? 1.0 : other.m_weight), m_sourceNeuron(other.m_sourceNeuron),
       m_targetNeuron(other.m_targetNeuron), m_isAxon(other.m_isAxon) {
 }
 
@@ -50,7 +60,7 @@ Synapse::Synapse(const Synapse& other)
 //-------------------------------------------------------------
 Synapse& Synapse::operator=(const Synapse& other) {
     if (this != &other) {
-        m_weight = other.m_weight;
+        m_weight = other.m_isAxon ? 1.0 : other.m_weight;
         m_sourceNeuron = other.m_sourceNeuron;
         m_targetNeuron = other.m_targetNeuron;
         m_isAxon = other.m_isAxon;
@@ -66,9 +76,7 @@ Synapse& Synapse::operator=(const Synapse& other) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Synapse::~Synapse() {
-    // Note: We don't delete neurons as they are managed elsewhere
-}
+Synapse::~Synapse() = default;
 
 //-------------------------------------------------------------
 //【函数名称】getWeight
@@ -142,9 +150,10 @@ void Synapse::setSourceNeuron(Neuron* neuron) {
 //【更改记录】
 //-------------------------------------------------------------
 void Synapse::setTargetNeuron(Neuron* neuron) {
-    if (neuron == nullptr) {
-        throw std::invalid_argument("Target neuron cannot be null");
+    if (!m_isAxon && neuron == nullptr) {
+        throw std::invalid_argument("Dendrite target neuron cannot be null");
     }
+    // Axons can have null target for external output
     m_targetNeuron = neuron;
 }
 
@@ -181,8 +190,19 @@ double Synapse::transmit(double input) const {
 //【更改记录】
 //-------------------------------------------------------------
 bool Synapse::isValid() const {
-    // For input synapses (dendrites from external input), source can be null
-    // For output synapses (axons to external output), target can be null
-    // Internal synapses should have both source and target
-    return true; // Basic validity - can be enhanced based on specific requirements
+    // For axons (outgoing connections): weight must be 1.0
+    if (m_isAxon) {
+        if (m_weight != 1.0) {
+            return false;
+        }
+        // Axons represent output from source neuron
+        // Source neuron should exist (the neuron this axon belongs to)
+        // Target can be null for external output connections
+        return m_sourceNeuron != nullptr;
+    }
+    
+    // For dendrites (incoming connections): weight can be any real number
+    // Target neuron should exist (the neuron this dendrite belongs to)
+    // Source can be null for external input connections
+    return m_targetNeuron != nullptr;
 }

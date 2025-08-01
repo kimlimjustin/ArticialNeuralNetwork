@@ -97,8 +97,7 @@ Neuron& Neuron::operator=(const Neuron& other) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Neuron::~Neuron() {
-}
+Neuron::~Neuron() = default;
 
 //-------------------------------------------------------------
 //【函数名称】getBias
@@ -270,21 +269,23 @@ bool Neuron::removeOutputSynapse(int index) {
 
 //-------------------------------------------------------------
 //【函数名称】connectTo
-//【函数功能】连接到目标神经元
-//【参数】targetNeuron：目标神经元，weight：权重
+//【函数功能】连接到目标神经元，根据规范轴突权重恒为1.0，连接权重存储在树突中
+//【参数】targetNeuron：目标神经元，weight：连接权重
 //【返回值】bool，是否连接成功
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
 bool Neuron::connectTo(Neuron& targetNeuron, double weight) {
-    // Create output synapse for this neuron
-    auto outputSynapse = unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, true)); // Axon with actual weight
+    // 根据规范：轴突权重恒为1.0，连接的实际权重存储在目标神经元的树突中
     
-    // Create input synapse for target neuron
-    auto inputSynapse = unique_ptr<Synapse>(new Synapse(weight, this, &targetNeuron, false)); // Dendrite with specified weight
+    // Create output synapse (axon) for this neuron with weight 1.0
+    unique_ptr<Synapse> outputSynapse(new Synapse(1.0, this, &targetNeuron, true));
     
-    // Add synapses
-    addOutputSynapse(move(outputSynapse));
+    // Create input synapse (dendrite) for target neuron with the actual connection weight  
+    unique_ptr<Synapse> inputSynapse(new Synapse(weight, this, &targetNeuron, false));
+    
+    // Add synapses to respective neurons
+    this->addOutputSynapse(move(outputSynapse));
     targetNeuron.addInputSynapse(move(inputSynapse));
     
     return true;
@@ -367,11 +368,24 @@ void Neuron::resetComputationState() {
 //【更改记录】
 //-------------------------------------------------------------
 bool Neuron::isValid() const {
-    // A neuron is valid if it has proper synapse configurations
-    // Input neurons (first layer) should have at least one input synapse for external input
-    // Output neurons (last layer) should have at least one output synapse for external output
-    // Hidden neurons should have both input and output synapses
-    return true; // Basic validity - can be enhanced based on specific requirements
+    // Check that all input synapses have valid weights and connections
+    for (const auto& synapse : m_inputSynapses) {
+        if (!synapse || !synapse->isValid()) {
+            return false;
+        }
+    }
+    
+    // Check that all output synapses have valid weights and connections
+    for (const auto& synapse : m_outputSynapses) {
+        if (!synapse || !synapse->isValid()) {
+            return false;
+        }
+    }
+    
+    // Check that activation function is properly set (if needed)
+    // Note: nullptr activation function is valid (means linear activation)
+    
+    return true;
 }
 
 //-------------------------------------------------------------

@@ -19,7 +19,10 @@ using namespace std;
 //【更改记录】
 //-------------------------------------------------------------
 double TanhFunction::activate(double x) const {
-    return tanh(x);
+    // f(x) = (e^x - e^(-x)) / (e^x + e^(-x)) as per specification
+    double ex = exp(x);
+    double e_neg_x = exp(-x);
+    return (ex - e_neg_x) / (ex + e_neg_x);
 }
 
 //-------------------------------------------------------------

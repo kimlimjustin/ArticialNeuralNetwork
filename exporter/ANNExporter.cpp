@@ -32,8 +32,7 @@ ANNExporter::ANNExporter() {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-ANNExporter::~ANNExporter() {
-}
+ANNExporter::~ANNExporter() = default;
 
 //-------------------------------------------------------------
 //【函数名称】exportNetwork
@@ -239,7 +238,18 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
     if (firstLayer) {
         writeComment(file, "Neuron 0 to " + to_string(firstLayer->getNeuronCount() - 1) + ": has one Dendrite");
         for (int i = 0; i < firstLayer->getNeuronCount(); ++i) {
-            file << "S -1 " << i << " 1.0" << endl;
+            const Neuron* neuron = firstLayer->getNeuron(i);
+            if (neuron && neuron->getInputSynapseCount() > 0) {
+                // Find the input synapse with source = nullptr (external input)
+                for (int j = 0; j < neuron->getInputSynapseCount(); ++j) {
+                    const Synapse* synapse = neuron->getInputSynapse(j);
+                    if (synapse && synapse->getSourceNeuron() == nullptr) {
+                        file << "S -1 " << i << " " << fixed << setprecision(1) 
+                             << synapse->getWeight() << endl;
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -257,7 +267,18 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
         writeComment(file, "Neuron " + to_string(lastLayerStart) + " to " + 
                     to_string(lastLayerStart + lastLayer->getNeuronCount() - 1) + ": has one Axon");
         for (int i = 0; i < lastLayer->getNeuronCount(); ++i) {
-            file << "S " << (lastLayerStart + i) << " -1 1.0" << endl;
+            const Neuron* neuron = lastLayer->getNeuron(i);
+            if (neuron && neuron->getOutputSynapseCount() > 0) {
+                // Find the output synapse with target = nullptr (external output)
+                for (int j = 0; j < neuron->getOutputSynapseCount(); ++j) {
+                    const Synapse* synapse = neuron->getOutputSynapse(j);
+                    if (synapse && synapse->getTargetNeuron() == nullptr) {
+                        file << "S " << (lastLayerStart + i) << " -1 " << fixed << setprecision(1) 
+                             << synapse->getWeight() << endl;
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -298,8 +319,19 @@ bool ANNExporter::writeConnections(ofstream& file, const Network& network) {
                     // Find the global index of the target neuron
                     int targetGlobalIndex = findNeuronGlobalIndex(network, targetNeuron);
                     if (targetGlobalIndex >= 0) {
+                        // 根据规范：轴突权重恒为1.0，实际连接权重存储在目标神经元的树突中
+                        // 找到目标神经元中对应的输入突触（树突）来获取实际权重
+                        double connectionWeight = 1.0; // 默认权重
+                        for (int inputIdx = 0; inputIdx < targetNeuron->getInputSynapseCount(); ++inputIdx) {
+                            const Synapse* inputSynapse = targetNeuron->getInputSynapse(inputIdx);
+                            if (inputSynapse && inputSynapse->getSourceNeuron() == neuron) {
+                                connectionWeight = inputSynapse->getWeight();
+                                break;
+                            }
+                        }
+                        
                         file << "S " << globalNeuronIndex << " " << targetGlobalIndex 
-                             << " " << fixed << setprecision(4) << synapse->getWeight() 
+                             << " " << fixed << setprecision(4) << connectionWeight 
                              << endl;
                     }
                 }

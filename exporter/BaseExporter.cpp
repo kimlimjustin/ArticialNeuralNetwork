@@ -51,6 +51,19 @@ string BaseExporter::getFileExtension(const string& filename) const {
 //【更改记录】
 //-------------------------------------------------------------
 bool BaseExporter::validateNetworkForExport(const Network& network) const {
-    // Basic validation - can be enhanced
-    return network.getLayerCount() > 0;
+    // Comprehensive validation before export
+    if (network.getLayerCount() == 0) {
+        return false;
+    }
+    
+    // Check that each layer has at least one neuron
+    for (int i = 0; i < network.getLayerCount(); ++i) {
+        const Layer* layer = network.getLayer(i);
+        if (!layer || layer->getNeuronCount() == 0) {
+            return false;
+        }
+    }
+    
+    // Use the network's built-in validation
+    return network.isValid();
 }

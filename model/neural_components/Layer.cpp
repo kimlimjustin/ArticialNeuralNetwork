@@ -80,8 +80,7 @@ Layer& Layer::operator=(const Layer& other) {
 //【开发者及日期】林钲凯 2025-07-27
 //【更改记录】
 //-------------------------------------------------------------
-Layer::~Layer() {
-}
+Layer::~Layer() = default;
 
 //-------------------------------------------------------------
 //【函数名称】addNeuron
@@ -258,8 +257,16 @@ void Layer::clear() {
 int Layer::getTotalSynapseCount() const {
     int totalSynapses = 0;
     for (const auto& neuron : m_neurons) {
+        // Count input synapses to avoid double counting internal connections
         totalSynapses += neuron->getInputSynapseCount();
-        totalSynapses += neuron->getOutputSynapseCount();
+        
+        // Also count output synapses that connect to external outputs (target = nullptr)
+        for (int i = 0; i < neuron->getOutputSynapseCount(); ++i) {
+            const Synapse* synapse = neuron->getOutputSynapse(i);
+            if (synapse && synapse->getTargetNeuron() == nullptr) {
+                totalSynapses++; // Count external output synapses
+            }
+        }
     }
     return totalSynapses;
 }

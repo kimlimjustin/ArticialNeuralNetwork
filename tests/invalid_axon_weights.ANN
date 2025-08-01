@@ -1,0 +1,25 @@
+# invalid_axon_weights.ANN - 包含无效轴突权重的网络文件
+G InvalidAxonNetwork
+# 简单的3层网络
+N 0.0 0
+N 0.0 0
+N 0.0 0
+
+# Layer 0: Neuron 0
+L 0 0
+# Layer 1: Neuron 1
+L 1 1
+# Layer 2: Neuron 2
+L 2 2
+
+# 有效的输入树突
+S -1 0 1.0
+
+# 无效的神经元间连接 - 轴突权重不为1.0
+S 0 1 0.5
+
+# 无效的输出轴突权重
+S 1 2 2.0
+
+# 另一个无效的输出轴突
+S 2 -1 0.8
