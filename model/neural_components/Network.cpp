@@ -339,10 +339,20 @@ vector<double> Network::predict(const vector<double>& inputs) {
                 const Neuron* pNeuron = pLayer->getNeuron(iNeuronIndex);
                 if (pNeuron && pNeuron->getInputSynapseCount() > 0) {
                     // Neuron has input synapses, provide all previous outputs
-                    layerInputs.push_back(currentOutputs);
+                    // This assumes a fully connected architecture or that the neuron
+                    // will only use as many inputs as it has synapses
+                    vector<double> neuronInputs;
+                    for (int iSynapseIdx = 0; iSynapseIdx < pNeuron->getInputSynapseCount(); ++iSynapseIdx) {
+                        if (iSynapseIdx < static_cast<int>(currentOutputs.size())) {
+                            neuronInputs.push_back(currentOutputs[iSynapseIdx]);
+                        } else {
+                            neuronInputs.push_back(0.0); // Default value if not enough outputs
+                        }
+                    }
+                    layerInputs.push_back(neuronInputs);
                 } else {
-                    // Neuron without synapses, provide all previous outputs anyway
-                    layerInputs.push_back(currentOutputs);
+                    // Neuron without synapses, provide empty input vector
+                    layerInputs.push_back(vector<double>());
                 }
             }
             currentOutputs = pLayer->forwardPropagate(layerInputs);
